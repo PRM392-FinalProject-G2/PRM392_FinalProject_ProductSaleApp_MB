@@ -1,82 +1,110 @@
 package com.example.prm392_finalproject_productsaleapp_group2;
 
 import android.content.Intent;
+import android.content.res.AssetFileDescriptor;
+import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
-import android.net.Uri;
 import android.os.Bundle;
-import android.widget.VideoView;
+import android.view.Surface;
+import android.view.TextureView;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import com.example.prm392_finalproject_productsaleapp_group2.auth.LoginActivity;
+import com.example.prm392_finalproject_productsaleapp_group2.auth.SessionManager;
+import com.example.prm392_finalproject_productsaleapp_group2.product.HomeActivity;
 
-public class SplashActivity extends AppCompatActivity {
+public class SplashActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener {
 
-    private VideoView videoView;
+    private TextureView textureView;
+    private MediaPlayer mediaPlayer;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
+
+        // Hide system bars for true fullscreen
+        WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        WindowInsetsControllerCompat controller = new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
+        controller.hide(WindowInsetsCompat.Type.systemBars());
+        controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+
         setContentView(R.layout.activity_splash);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
 
-        videoView = findViewById(R.id.videoView);
+        textureView = findViewById(R.id.videoTexture);
+        textureView.setSurfaceTextureListener(this);
+    }
 
-        // Set video path from drawable/raw folder
-        Uri videoUri = Uri.parse("android.resource://" + getPackageName() + "/" + R.raw.splash);
-        videoView.setVideoURI(videoUri);
+    private void navigateNext() {
+        SessionManager sessionManager = new SessionManager(SplashActivity.this);
+        boolean isLoggedIn = sessionManager.isLoggedIn();
+        Intent intent = new Intent(SplashActivity.this,
+                isLoggedIn ? HomeActivity.class : LoginActivity.class);
+        startActivity(intent);
+        finish();
+    }
 
-        // Set listener for when video completes
-        videoView.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mp) {
-                // Navigate to LoginActivity when video finishes
-                Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish(); // Close splash activity so user can't go back to it
-            }
-        });
-
-        // Set listener for errors
-        videoView.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-            @Override
-            public boolean onError(MediaPlayer mp, int what, int extra) {
-                // If video fails to play, go directly to login
-                Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish();
+    @Override
+    public void onSurfaceTextureAvailable(SurfaceTexture surfaceTexture, int width, int height) {
+        try {
+            Surface surface = new Surface(surfaceTexture);
+            AssetFileDescriptor afd = getResources().openRawResourceFd(R.raw.splash);
+            mediaPlayer = new MediaPlayer();
+            mediaPlayer.setSurface(surface);
+            mediaPlayer.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            afd.close();
+            mediaPlayer.setLooping(false);
+            mediaPlayer.setOnPreparedListener(mp -> mp.start());
+            mediaPlayer.setOnCompletionListener(mp -> navigateNext());
+            mediaPlayer.setOnErrorListener((mp, what, extra) -> {
+                navigateNext();
                 return true;
-            }
-        });
+            });
+            mediaPlayer.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
+            mediaPlayer.prepareAsync();
+        } catch (Exception e) {
+            navigateNext();
+        }
+    }
 
-        // Start playing the video
-        videoView.start();
+    @Override
+    public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
+    }
+
+    @Override
+    public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
+        return true;
+    }
+
+    @Override
+    public void onSurfaceTextureUpdated(SurfaceTexture surface) {
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        // Pause video when activity is paused
-        if (videoView != null && videoView.isPlaying()) {
-            videoView.pause();
+        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+            mediaPlayer.pause();
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // Resume video when activity is resumed
-        if (videoView != null && !videoView.isPlaying()) {
-            videoView.start();
+        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+            mediaPlayer.start();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
         }
     }
 }
