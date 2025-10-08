@@ -1,6 +1,8 @@
 package com.example.prm392_finalproject_productsaleapp_group2.product;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -9,6 +11,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.prm392_finalproject_productsaleapp_group2.R;
+import com.example.prm392_finalproject_productsaleapp_group2.utils.NavigationBarUtil;
 
 public class HomeActivity extends AppCompatActivity {
 
@@ -22,5 +25,18 @@ public class HomeActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        // Setup navigation bar click listeners
+        NavigationBarUtil.setupNavigationBar(this);
+        
+        // Highlight current active button
+        NavigationBarUtil.setActiveNavigationButton(this, "home");
+    }
+
+    @Override
+    public void onBackPressed() {
+        // Disable back button for main navigation activity
+        // Or you can exit the app
+        super.onBackPressed();
     }
 }

@@ -31,6 +31,7 @@
                 android:layout_height="432dp"
                 android:background="@drawable/bg_banner_rounded"
                 android:scaleType="centerCrop"
+                android:clipToOutline="true"
                 android:src="@drawable/background"
                 app:layout_constraintDimensionRatio="16:9"
                 app:layout_constraintEnd_toEndOf="parent"
