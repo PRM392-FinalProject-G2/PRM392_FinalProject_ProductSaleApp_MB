@@ -9,6 +9,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.prm392_finalproject_productsaleapp_group2.R;
+import com.example.prm392_finalproject_productsaleapp_group2.utils.NavigationBarUtil;
 
 public class MapActivity extends AppCompatActivity {
 
@@ -22,5 +23,14 @@ public class MapActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        // Setup navigation bar
+        NavigationBarUtil.setupNavigationBar(this);
+        NavigationBarUtil.setActiveNavigationButton(this, "map");
+    }
+
+    @Override
+    public void onBackPressed() {
+        NavigationBarUtil.finishActivityWithoutAnimation(this);
     }
 }

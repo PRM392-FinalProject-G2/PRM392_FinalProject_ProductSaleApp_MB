@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:orientation="horizontal"
+    android:background="@drawable/bg_navbar"
+    android:padding="8dp"
+    android:elevation="8dp">
+
+    <!-- Profile Button -->
+    <LinearLayout
+        android:id="@+id/btn_profile"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/nav_button_default_background"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="4dp"
+        android:layout_margin="2dp">
+        
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/profile"
+            android:scaleType="centerInside" />
+
+    </LinearLayout>
+
+    <!-- Chat Button -->
+    <LinearLayout
+        android:id="@+id/btn_chat"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/nav_button_default_background"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="4dp"
+        android:layout_margin="2dp">
+        
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/chat"
+            android:scaleType="centerInside" />
+    </LinearLayout>
+
+    <!-- Home Button (larger) -->
+    <LinearLayout
+        android:id="@+id/btn_home"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1.2"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/nav_button_default_background"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="4dp"
+        android:layout_margin="2dp">
+        
+        <ImageView
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:src="@drawable/home"
+            android:scaleType="centerInside" />
+
+    </LinearLayout>
+
+    <!-- Map Button -->
+    <LinearLayout
+        android:id="@+id/btn_map"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/nav_button_default_background"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="4dp"
+        android:layout_margin="2dp">
+        
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/map"
+            android:scaleType="centerInside" />
+
+    </LinearLayout>
+
+    <!-- Cart Button -->
+    <LinearLayout
+        android:id="@+id/btn_cart"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="@drawable/nav_button_default_background"
+        android:clickable="true"
+        android:focusable="true"
+        android:padding="4dp"
+        android:layout_margin="2dp">
+        
+        <ImageView
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/cart"
+            android:scaleType="centerInside" />
+
+    </LinearLayout>
+
+</LinearLayout>
