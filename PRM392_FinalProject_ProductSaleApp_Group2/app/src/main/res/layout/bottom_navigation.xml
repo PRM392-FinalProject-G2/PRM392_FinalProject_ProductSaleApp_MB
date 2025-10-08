@@ -22,8 +22,8 @@
         android:layout_margin="2dp">
         
         <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
             android:src="@drawable/profile"
             android:scaleType="centerInside" />
 
@@ -44,8 +44,8 @@
         android:layout_margin="2dp">
         
         <ImageView
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="55dp"
+            android:layout_height="55dp"
             android:src="@drawable/chat"
             android:scaleType="centerInside" />
     </LinearLayout>
@@ -85,12 +85,12 @@
         android:focusable="true"
         android:padding="4dp"
         android:layout_margin="2dp">
-        
+
         <ImageView
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@drawable/map"
-            android:scaleType="centerInside" />
+            android:scaleType="centerInside"
+            android:src="@drawable/map" />
 
     </LinearLayout>
 
