@@ -5,6 +5,7 @@ import android.content.res.AssetFileDescriptor;
 import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Surface;
 import android.view.TextureView;
 
@@ -31,6 +32,12 @@ public class SplashActivity extends AppCompatActivity implements TextureView.Sur
         WindowInsetsControllerCompat controller = new WindowInsetsControllerCompat(getWindow(), getWindow().getDecorView());
         controller.hide(WindowInsetsCompat.Type.systemBars());
         controller.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+        
+        // Enable edge-to-edge and allow content behind system bars
+        if (android.os.Build.VERSION.SDK_INT >= 28) {
+            getWindow().getAttributes().layoutInDisplayCutoutMode = 
+                android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
 
         setContentView(R.layout.activity_splash);
 
@@ -41,6 +48,10 @@ public class SplashActivity extends AppCompatActivity implements TextureView.Sur
     private void navigateNext() {
         SessionManager sessionManager = new SessionManager(SplashActivity.this);
         boolean isLoggedIn = sessionManager.isLoggedIn();
+        
+        Log.d("SplashActivity", "navigateNext() - isLoggedIn: " + isLoggedIn);
+        Log.d("SplashActivity", "Navigating to: " + (isLoggedIn ? "HomeActivity" : "LoginActivity"));
+        
         Intent intent = new Intent(SplashActivity.this,
                 isLoggedIn ? HomeActivity.class : LoginActivity.class);
         startActivity(intent);
@@ -63,6 +74,7 @@ public class SplashActivity extends AppCompatActivity implements TextureView.Sur
                 navigateNext();
                 return true;
             });
+            // Scale video to fill entire screen, cropping if necessary
             mediaPlayer.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
             mediaPlayer.prepareAsync();
         } catch (Exception e) {

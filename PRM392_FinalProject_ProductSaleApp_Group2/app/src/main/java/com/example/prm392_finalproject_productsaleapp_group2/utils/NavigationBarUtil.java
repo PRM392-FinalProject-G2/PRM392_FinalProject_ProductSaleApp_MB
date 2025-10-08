@@ -7,6 +7,10 @@ import android.view.View;
 import android.view.animation.AnimationUtils;
 import android.view.animation.ScaleAnimation;
 
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 import com.example.prm392_finalproject_productsaleapp_group2.R;
 import com.example.prm392_finalproject_productsaleapp_group2.auth.ProfileActivity;
 import com.example.prm392_finalproject_productsaleapp_group2.cart.CartActivity;
@@ -84,6 +88,24 @@ public class NavigationBarUtil {
                     activity.startActivity(intent);
                     activity.overridePendingTransition(0, 0);
                 }
+            });
+        }
+
+        // Ensure bottom navigation sits at the very bottom (edge-to-edge) but pads content
+        View bottomNav = activity.findViewById(R.id.bottom_navigation);
+        if (bottomNav != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(bottomNav, (v, insets) -> {
+                Insets sys = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                Object tag = v.getTag(R.id.bottom_navigation);
+                int baseBottomPadding;
+                if (tag instanceof Integer) {
+                    baseBottomPadding = (Integer) tag;
+                } else {
+                    baseBottomPadding = v.getPaddingBottom();
+                    v.setTag(R.id.bottom_navigation, baseBottomPadding);
+                }
+                v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), baseBottomPadding + sys.bottom);
+                return insets;
             });
         }
     }
