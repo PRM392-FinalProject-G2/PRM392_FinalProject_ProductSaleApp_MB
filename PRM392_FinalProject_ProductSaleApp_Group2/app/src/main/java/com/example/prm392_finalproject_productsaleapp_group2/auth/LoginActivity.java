@@ -58,6 +58,7 @@ public class LoginActivity extends AppCompatActivity {
         private final String password;
         private final boolean remember;
         private String accessToken;
+        private int userId;
 
         LoginTask(String identifier, String password, boolean remember) {
             this.identifier = identifier;
@@ -89,12 +90,30 @@ public class LoginActivity extends AppCompatActivity {
                         String line;
                         while ((line = br.readLine()) != null) sb.append(line);
                         String json = sb.toString();
+                        
+                        // Parse accessToken
                         int idx = json.indexOf("\"accessToken\":");
                         if (idx != -1) {
                             int q1 = json.indexOf('"', idx + 14);
                             int q2 = json.indexOf('"', q1 + 1);
                             if (q1 != -1 && q2 != -1) accessToken = json.substring(q1 + 1, q2);
                         }
+                        
+                        // Parse userId
+                        int userIdIdx = json.indexOf("\"userId\":");
+                        if (userIdIdx != -1) {
+                            int startIdx = userIdIdx + 9;
+                            int endIdx = json.indexOf(',', startIdx);
+                            if (endIdx == -1) endIdx = json.indexOf('}', startIdx);
+                            if (endIdx != -1) {
+                                try {
+                                    userId = Integer.parseInt(json.substring(startIdx, endIdx).trim());
+                                } catch (NumberFormatException e) {
+                                    userId = -1;
+                                }
+                            }
+                        }
+                        
                         return accessToken != null && !accessToken.isEmpty();
                     }
                 }
@@ -109,7 +128,14 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         protected void onPostExecute(Boolean success) {
             if (success) {
-                if (remember) new SessionManager(LoginActivity.this).saveAuthToken(accessToken);
+                SessionManager sessionManager = new SessionManager(LoginActivity.this);
+                if (remember) {
+                    // Save both token and userId for persistent login
+                    sessionManager.saveUserData(accessToken, userId);
+                } else {
+                    // Save both token and userId for current session only
+                    sessionManager.saveUserData(accessToken, userId);
+                }
                 Toast.makeText(LoginActivity.this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                 finish();
