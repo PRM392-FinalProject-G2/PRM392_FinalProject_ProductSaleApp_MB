@@ -21,9 +21,6 @@
             android:name=".voucher.VoucherActivity"
             android:exported="false" />
         <activity
-            android:name=".voucher.WishlistActivity"
-            android:exported="false" />
-        <activity
             android:name=".order.ListOrderActivity"
             android:exported="false" />
         <activity
