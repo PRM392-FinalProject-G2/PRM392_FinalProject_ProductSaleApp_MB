@@ -64,7 +64,8 @@
             android:exported="false" />
         <activity
             android:name=".cart.CartActivity"
-            android:exported="false" />
+            android:exported="false" >
+        </activity>
         <activity
             android:name=".SplashActivity"
             android:exported="true"
