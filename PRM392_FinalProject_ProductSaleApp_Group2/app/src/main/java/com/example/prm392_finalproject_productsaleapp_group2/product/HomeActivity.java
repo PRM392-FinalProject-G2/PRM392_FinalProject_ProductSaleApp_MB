@@ -18,6 +18,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.prm392_finalproject_productsaleapp_group2.R;
 import com.example.prm392_finalproject_productsaleapp_group2.net.ApiConfig;
+import com.example.prm392_finalproject_productsaleapp_group2.utils.NavigationBarUtil;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -139,6 +140,16 @@ public class HomeActivity extends AppCompatActivity {
             Intent intent = new Intent(HomeActivity.this, FilterActivity.class);
             startActivity(intent);
         });
+
+        // Setup navigation bar
+        NavigationBarUtil.setupNavigationBar(this);
+        NavigationBarUtil.setActiveNavigationButton(this, "home");
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        NavigationBarUtil.finishActivityWithoutAnimation(this);
     }
 
     @Override
