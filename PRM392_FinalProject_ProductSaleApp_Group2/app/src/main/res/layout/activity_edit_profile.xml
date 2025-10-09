@@ -83,16 +83,35 @@
                         app:layout_constraintBottom_toBottomOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <ImageView
-                    android:id="@+id/img_avatar"
+                <!-- Avatar with camera icon -->
+                <FrameLayout
                     android:layout_width="96dp"
                     android:layout_height="96dp"
                     android:layout_gravity="center_horizontal"
-                    android:src="@drawable/profile"
-                    android:scaleType="centerCrop"
-                    android:background="@drawable/profile_avatar_background"
-                    android:padding="2dp"
-                    android:layout_marginBottom="20dp" />
+                    android:layout_marginBottom="20dp">
+
+                    <com.google.android.material.imageview.ShapeableImageView
+                        android:id="@+id/img_avatar"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/profile"
+                        android:scaleType="centerCrop"
+                        android:padding="2dp"
+                        app:shapeAppearanceOverlay="@style/CircleImageView"
+                        app:strokeColor="#E0E0E0"
+                        app:strokeWidth="2dp" />
+
+                    <!-- Camera icon overlay -->
+                    <ImageView
+                        android:id="@+id/icon_camera"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
+                        android:layout_gravity="bottom|end"
+                        android:background="@drawable/bg_camera_icon"
+                        android:src="@drawable/ic_camera"
+                        android:padding="6dp"
+                        android:elevation="2dp" />
+                </FrameLayout>
 
                 <!-- Name -->
                 <TextView
@@ -106,7 +125,9 @@
                     android:layout_height="48dp"
                     android:background="@drawable/edit_text_background"
                     android:padding="12dp"
-                    android:hint="Tên người dùng" />
+                    android:hint="Tên người dùng"
+                    android:enabled="false"
+                    android:textColor="#808080" />
 
                 <!-- Email -->
                 <TextView
