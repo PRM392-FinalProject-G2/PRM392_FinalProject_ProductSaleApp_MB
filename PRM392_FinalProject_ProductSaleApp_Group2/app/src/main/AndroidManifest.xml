@@ -18,6 +18,9 @@
         android:theme="@style/Theme.PRM392_FinalProject_ProductSaleApp_Group2"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".product.FilterActivity"
+            android:exported="false" />
+        <activity
             android:name=".auth.ChangePassword_1_Activity"
             android:exported="false" />
         <activity
