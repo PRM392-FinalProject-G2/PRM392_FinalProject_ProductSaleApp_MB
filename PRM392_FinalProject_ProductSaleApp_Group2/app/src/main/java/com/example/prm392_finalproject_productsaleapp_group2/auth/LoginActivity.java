@@ -129,14 +129,11 @@ public class LoginActivity extends AppCompatActivity {
         protected void onPostExecute(Boolean success) {
             if (success) {
                 SessionManager sessionManager = new SessionManager(LoginActivity.this);
-                if (remember) {
-                    // Save both token and userId for persistent login
-                    sessionManager.saveUserData(accessToken, userId);
-                } else {
-                    // Save both token and userId for current session only
-                    sessionManager.saveUserData(accessToken, userId);
-                }
-                Toast.makeText(LoginActivity.this, "Đăng nhập thành công", Toast.LENGTH_SHORT).show();
+                // Save user data with remember flag
+                sessionManager.saveUserData(accessToken, userId, remember);
+                
+                String msg = remember ? "Đăng nhập thành công (Đã ghi nhớ)" : "Đăng nhập thành công";
+                Toast.makeText(LoginActivity.this, msg, Toast.LENGTH_SHORT).show();
                 startActivity(new Intent(LoginActivity.this, HomeActivity.class));
                 finish();
             } else {

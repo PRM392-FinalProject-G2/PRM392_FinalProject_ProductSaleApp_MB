@@ -17,7 +17,7 @@ import androidx.core.view.WindowInsetsCompat;
 
 import com.example.prm392_finalproject_productsaleapp_group2.R;
 import com.example.prm392_finalproject_productsaleapp_group2.models.ApiResponse;
-import com.example.prm392_finalproject_productsaleapp_group2.models.OtpRequest;
+import com.example.prm392_finalproject_productsaleapp_group2.models.ChangePasswordRequest;
 import com.example.prm392_finalproject_productsaleapp_group2.net.AuthApiClient;
 import com.example.prm392_finalproject_productsaleapp_group2.services.AuthApiService;
 import com.example.prm392_finalproject_productsaleapp_group2.utils.NavigationBarUtil;
@@ -26,22 +26,23 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class ChangePassword_1_Activity extends AppCompatActivity {
+public class ChangePassword_3_Activity extends AppCompatActivity {
 
-    private static final String TAG = "ChangePassword_1";
-    
-    private EditText edtEmail;
+    private static final String TAG = "ChangePassword_3";
+
+    private EditText edtNewPassword, edtConfirmPassword;
     private AppCompatButton btnContinue;
     private ImageView btnBack;
+    private String email;
+    private String resetToken;
     private AuthApiService authApiService;
-    private SessionManager sessionManager;
     private ProgressDialog progressDialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_change_password1);
+        setContentView(R.layout.activity_change_password3);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             // Let content draw edge-to-edge; apply only sides to root
@@ -65,83 +66,91 @@ public class ChangePassword_1_Activity extends AppCompatActivity {
         // Setup navigation bar
         NavigationBarUtil.setupNavigationBar(this);
 
-        // Initialize API service and session manager
+        // Initialize API service
         authApiService = AuthApiClient.getInstance().getApiService();
-        sessionManager = new SessionManager(this);
 
         // Initialize progress dialog
         progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Đang gửi OTP...");
+        progressDialog.setMessage("Đang đổi mật khẩu...");
         progressDialog.setCancelable(false);
 
+        // Get email and resetToken from Intent
+        email = getIntent().getStringExtra("email");
+        resetToken = getIntent().getStringExtra("resetToken");
+
         // Initialize views
-        edtEmail = findViewById(R.id.edt_email);
+        edtNewPassword = findViewById(R.id.edt_new_password);
+        edtConfirmPassword = findViewById(R.id.edt_confirm_password);
         btnContinue = findViewById(R.id.btn_continue);
         btnBack = findViewById(R.id.btn_back);
 
         // Back button
         if (btnBack != null) {
             btnBack.setOnClickListener(v -> {
-                Intent intent = new Intent(ChangePassword_1_Activity.this, EditProfileActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                startActivity(intent);
-                overridePendingTransition(0, 0);
                 finish();
+                overridePendingTransition(0, 0);
             });
         }
 
         // Continue button
         btnContinue.setOnClickListener(v -> {
-            String email = edtEmail.getText().toString().trim();
-            
-            if (email.isEmpty()) {
-                Toast.makeText(this, "Vui lòng nhập email", Toast.LENGTH_SHORT).show();
+            String newPassword = edtNewPassword.getText().toString().trim();
+            String confirmPassword = edtConfirmPassword.getText().toString().trim();
+
+            // Validation
+            if (newPassword.isEmpty()) {
+                Toast.makeText(this, "Vui lòng nhập mật khẩu mới", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Get userId from session
-            int userId = sessionManager.getUserId();
-            if (userId == -1) {
-                Toast.makeText(this, "Vui lòng đăng nhập", Toast.LENGTH_SHORT).show();
+            if (confirmPassword.isEmpty()) {
+                Toast.makeText(this, "Vui lòng xác nhận mật khẩu", Toast.LENGTH_SHORT).show();
                 return;
             }
 
-            // Call API request OTP
-            requestOtp(email, userId);
+            if (!newPassword.equals(confirmPassword)) {
+                Toast.makeText(this, "Mật khẩu xác nhận không khớp", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            if (newPassword.length() < 6) {
+                Toast.makeText(this, "Mật khẩu phải có ít nhất 6 ký tự", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Call API to change password
+            changePassword(email, resetToken, newPassword, confirmPassword);
         });
     }
 
-    private void requestOtp(String email, int userId) {
+    private void changePassword(String email, String resetToken, String newPassword, String confirmPassword) {
         progressDialog.show();
 
-        OtpRequest otpRequest = new OtpRequest(email, userId);
+        ChangePasswordRequest request = new ChangePasswordRequest(email, resetToken, newPassword, confirmPassword);
 
-        authApiService.requestOtp(otpRequest).enqueue(new Callback<ApiResponse>() {
+        authApiService.changePassword(request).enqueue(new Callback<ApiResponse>() {
             @Override
             public void onResponse(Call<ApiResponse> call, Response<ApiResponse> response) {
                 progressDialog.dismiss();
 
                 if (response.isSuccessful() && response.body() != null) {
                     ApiResponse apiResponse = response.body();
-                    
+
                     if (apiResponse.isSuccess()) {
-                        // Success - show message and navigate to step 2
-                        Toast.makeText(ChangePassword_1_Activity.this, 
-                                apiResponse.getMessage(), 
-                                Toast.LENGTH_LONG).show();
-                        
-                        // Navigate to ChangePassword_2_Activity
-                        Intent intent = new Intent(ChangePassword_1_Activity.this, ChangePassword_2_Activity.class);
-                        intent.putExtra("email", email);
-                        intent.putExtra("userId", userId);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                        // Success - navigate to success page
+                        Toast.makeText(ChangePassword_3_Activity.this,
+                                apiResponse.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+
+                        Intent intent = new Intent(ChangePassword_3_Activity.this, ChangePassword_4_Activity.class);
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION | Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         startActivity(intent);
                         overridePendingTransition(0, 0);
                         finish();
                     } else {
                         // API returned success=false
-                        Toast.makeText(ChangePassword_1_Activity.this, 
-                                apiResponse.getMessage(), 
+                        Toast.makeText(ChangePassword_3_Activity.this,
+                                apiResponse.getMessage(),
                                 Toast.LENGTH_LONG).show();
                     }
                 } else {
@@ -150,29 +159,29 @@ public class ChangePassword_1_Activity extends AppCompatActivity {
                         if (response.errorBody() != null) {
                             String errorBody = response.errorBody().string();
                             Log.e(TAG, "Error response: " + errorBody);
-                            
+
                             // Try to parse error as ApiResponse
                             com.google.gson.Gson gson = new com.google.gson.Gson();
                             ApiResponse errorResponse = gson.fromJson(errorBody, ApiResponse.class);
-                            
+
                             if (errorResponse != null && errorResponse.getMessage() != null) {
-                                Toast.makeText(ChangePassword_1_Activity.this, 
-                                        errorResponse.getMessage(), 
+                                Toast.makeText(ChangePassword_3_Activity.this,
+                                        errorResponse.getMessage(),
                                         Toast.LENGTH_LONG).show();
                             } else {
-                                Toast.makeText(ChangePassword_1_Activity.this, 
-                                        "Lỗi: " + response.code(), 
+                                Toast.makeText(ChangePassword_3_Activity.this,
+                                        "Lỗi: " + response.code(),
                                         Toast.LENGTH_SHORT).show();
                             }
                         } else {
-                            Toast.makeText(ChangePassword_1_Activity.this, 
-                                    "Lỗi: " + response.code(), 
+                            Toast.makeText(ChangePassword_3_Activity.this,
+                                    "Lỗi: " + response.code(),
                                     Toast.LENGTH_SHORT).show();
                         }
                     } catch (Exception e) {
                         Log.e(TAG, "Error parsing error response", e);
-                        Toast.makeText(ChangePassword_1_Activity.this, 
-                                "Email không khớp hoặc không thể gửi OTP", 
+                        Toast.makeText(ChangePassword_3_Activity.this,
+                                "Không thể đổi mật khẩu. Vui lòng thử lại",
                                 Toast.LENGTH_LONG).show();
                     }
                 }
@@ -182,8 +191,8 @@ public class ChangePassword_1_Activity extends AppCompatActivity {
             public void onFailure(Call<ApiResponse> call, Throwable t) {
                 progressDialog.dismiss();
                 Log.e(TAG, "API call failed", t);
-                Toast.makeText(ChangePassword_1_Activity.this, 
-                        "Lỗi kết nối: " + t.getMessage(), 
+                Toast.makeText(ChangePassword_3_Activity.this,
+                        "Lỗi kết nối: " + t.getMessage(),
                         Toast.LENGTH_LONG).show();
             }
         });
