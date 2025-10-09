@@ -10,5 +10,3 @@ public final class ApiConfig {
         return BASE_URL + path;
     }
 }
-
-
