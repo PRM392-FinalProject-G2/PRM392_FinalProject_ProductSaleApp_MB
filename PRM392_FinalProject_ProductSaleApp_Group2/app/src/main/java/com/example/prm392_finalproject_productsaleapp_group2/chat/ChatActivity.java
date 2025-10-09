@@ -9,6 +9,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.prm392_finalproject_productsaleapp_group2.R;
+import com.example.prm392_finalproject_productsaleapp_group2.utils.NavigationBarUtil;
 
 public class ChatActivity extends AppCompatActivity {
 
@@ -19,8 +20,17 @@ public class ChatActivity extends AppCompatActivity {
         setContentView(R.layout.activity_chat);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
             return insets;
         });
+
+        // Setup navigation bar
+        NavigationBarUtil.setupNavigationBar(this);
+        NavigationBarUtil.setActiveNavigationButton(this, "chat");
+    }
+
+    @Override
+    public void onBackPressed() {
+        NavigationBarUtil.finishActivityWithoutAnimation(this);
     }
 }
