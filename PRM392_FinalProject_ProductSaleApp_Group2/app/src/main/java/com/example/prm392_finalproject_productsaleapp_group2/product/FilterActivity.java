@@ -11,7 +11,11 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
+import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.example.prm392_finalproject_productsaleapp_group2.R;
 import com.example.prm392_finalproject_productsaleapp_group2.net.ApiConfig;
@@ -49,7 +53,33 @@ public class FilterActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        EdgeToEdge.enable(this);
+        
+        // Set status bar transparent to let gradient show through
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        
         setContentView(R.layout.activity_filter_product);
+        
+        // Handle window insets for edge-to-edge display
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            
+            // Apply only sides to root, let header extend under status bar
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
+
+            // Add top inset to header so its background extends under status bar
+            android.view.View header = findViewById(R.id.header_layout);
+            if (header != null) {
+                header.setPadding(
+                        header.getPaddingLeft(),
+                        systemBars.top,
+                        header.getPaddingRight(),
+                        header.getPaddingBottom()
+                );
+            }
+
+            return WindowInsetsCompat.CONSUMED;
+        });
 
         // 🔹 Ánh xạ view
         chipGroupCategory = findViewById(R.id.chipGroupCategory);

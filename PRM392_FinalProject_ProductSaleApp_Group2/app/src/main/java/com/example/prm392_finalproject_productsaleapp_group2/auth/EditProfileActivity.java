@@ -91,10 +91,17 @@ public class EditProfileActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        
+        // Set status bar transparent to let gradient show through
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        
         setContentView(R.layout.activity_edit_profile);
+        
+        // Apply window insets - keep header fixed, don't let keyboard affect it
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            // Let content draw edge-to-edge; apply only sides to root
+            
+            // Apply only sides to root, let header extend under status bar
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
             // Add top inset to header so its background extends under status bar
@@ -102,14 +109,14 @@ public class EditProfileActivity extends AppCompatActivity {
             if (header != null) {
                 header.setPadding(
                         header.getPaddingLeft(),
-                        header.getPaddingTop() + systemBars.top,
+                        systemBars.top,
                         header.getPaddingRight(),
                         header.getPaddingBottom()
                 );
             }
-
-            // Bottom inset is handled centrally in NavigationBarUtil
-            return insets;
+            
+            // Don't consume insets - let Android's adjustResize handle keyboard
+            return WindowInsetsCompat.CONSUMED;
         });
 
         // Setup navigation bar
