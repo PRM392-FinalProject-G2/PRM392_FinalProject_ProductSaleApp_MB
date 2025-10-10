@@ -45,10 +45,16 @@ public class ChangePassword_2_Activity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        
+        // Set status bar transparent to let gradient show through
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        
         setContentView(R.layout.activity_change_password2);
+        
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            // Let content draw edge-to-edge; apply only sides to root
+            
+            // Apply only sides to root, let header extend under status bar
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
             // Add top inset to header so its background extends under status bar
@@ -56,14 +62,13 @@ public class ChangePassword_2_Activity extends AppCompatActivity {
             if (header != null) {
                 header.setPadding(
                         header.getPaddingLeft(),
-                        header.getPaddingTop() + systemBars.top,
+                        systemBars.top,
                         header.getPaddingRight(),
                         header.getPaddingBottom()
                 );
             }
 
-            // Bottom inset is handled centrally in NavigationBarUtil
-            return insets;
+            return WindowInsetsCompat.CONSUMED;
         });
 
         // Setup navigation bar

@@ -28,6 +28,8 @@ import com.example.prm392_finalproject_productsaleapp_group2.order.ListOrderActi
 import com.example.prm392_finalproject_productsaleapp_group2.wishlist.WishlistActivity;
 import com.example.prm392_finalproject_productsaleapp_group2.voucher.VoucherActivity;
 import com.example.prm392_finalproject_productsaleapp_group2.payment.PaymentActivity;
+import com.example.prm392_finalproject_productsaleapp_group2.services.FCMTokenManager;
+import com.example.prm392_finalproject_productsaleapp_group2.utils.NotificationHelper;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -52,26 +54,31 @@ public class ProfileActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        
+        // Set status bar transparent to let gradient show through
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        
         setContentView(R.layout.activity_profile);
         
         // Handle window insets for edge-to-edge display
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
 
-            // Header receives top inset so gradient can go under status bar
+            // Apply only sides to root, let header extend under status bar
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
+
+            // Add top inset to header so its background extends under status bar
             View headerLayout = findViewById(R.id.header_layout);
             if (headerLayout != null) {
                 headerLayout.setPadding(
                         headerLayout.getPaddingLeft(),
-                        headerLayout.getPaddingTop() + systemBars.top,
+                        systemBars.top,
                         headerLayout.getPaddingRight(),
                         headerLayout.getPaddingBottom()
                 );
             }
 
-            // Do not add bottom padding here; NavigationBarUtil gives it to bottom_navigation
-            v.setPadding(0, 0, 0, 0);
-            return insets;
+            return WindowInsetsCompat.CONSUMED;
         });
 
         // Initialize views
@@ -185,6 +192,12 @@ public class ProfileActivity extends AppCompatActivity {
     }
     
     private void performLogout() {
+        // Deactivate FCM token
+        FCMTokenManager.getInstance(this).deactivateToken();
+        
+        // Clear badge notification
+        NotificationHelper.clearBadge(this);
+        
         // Clear session data
         sessionManager.clear();
         

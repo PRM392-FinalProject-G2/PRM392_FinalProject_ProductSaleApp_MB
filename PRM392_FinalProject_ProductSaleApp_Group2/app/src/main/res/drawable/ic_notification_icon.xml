@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="512"
+    android:viewportHeight="512">
+    
+    <!-- TechZone logo monochrome version - "TZ" text simplified -->
+    <group>
+        <!-- Letter T -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M80,120 L240,120 L240,160 L180,160 L180,400 L140,400 L140,160 L80,160 Z"/>
+        
+        <!-- Letter Z -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M280,120 L440,120 L440,160 L340,160 L440,360 L440,400 L280,400 L280,360 L380,360 L280,160 Z"/>
+    </group>
+</vector>
+

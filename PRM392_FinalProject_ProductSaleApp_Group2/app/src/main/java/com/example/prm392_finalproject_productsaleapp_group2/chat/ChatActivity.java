@@ -17,11 +17,16 @@ public class ChatActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        
+        // Set status bar transparent to let gradient show through
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        
         setContentView(R.layout.activity_chat);
+        
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
-            return insets;
+            return WindowInsetsCompat.CONSUMED;
         });
 
         // Setup navigation bar

@@ -1,5 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -47,6 +48,14 @@ dependencies {
     
     // CardView for profile cards
     implementation("androidx.cardview:cardview:1.0.0")
+    
+    // Firebase Cloud Messaging
+    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+    implementation("com.google.firebase:firebase-messaging")
+    implementation("com.google.firebase:firebase-analytics")
+    
+    // ShortcutBadger for app icon badge
+    implementation("me.leolin:ShortcutBadger:1.1.22@aar")
     
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)

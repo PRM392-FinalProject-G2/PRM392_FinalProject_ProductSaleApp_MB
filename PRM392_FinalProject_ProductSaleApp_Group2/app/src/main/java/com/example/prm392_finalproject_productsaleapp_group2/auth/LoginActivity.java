@@ -14,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.prm392_finalproject_productsaleapp_group2.R;
 import com.example.prm392_finalproject_productsaleapp_group2.product.HomeActivity;
 import com.example.prm392_finalproject_productsaleapp_group2.net.ApiConfig;
+import com.example.prm392_finalproject_productsaleapp_group2.services.FCMTokenManager;
+import com.example.prm392_finalproject_productsaleapp_group2.utils.FCMDebugHelper;
 import com.google.android.material.textfield.TextInputEditText;
 
 public class LoginActivity extends AppCompatActivity {
@@ -131,6 +133,12 @@ public class LoginActivity extends AppCompatActivity {
                 SessionManager sessionManager = new SessionManager(LoginActivity.this);
                 // Save user data with remember flag
                 sessionManager.saveUserData(accessToken, userId, remember);
+                
+                // Print debug info
+                FCMDebugHelper.printDebugInfo(LoginActivity.this);
+                
+                // Register FCM token after successful login
+                FCMTokenManager.getInstance(LoginActivity.this).refreshToken();
                 
                 String msg = remember ? "Đăng nhập thành công (Đã ghi nhớ)" : "Đăng nhập thành công";
                 Toast.makeText(LoginActivity.this, msg, Toast.LENGTH_SHORT).show();

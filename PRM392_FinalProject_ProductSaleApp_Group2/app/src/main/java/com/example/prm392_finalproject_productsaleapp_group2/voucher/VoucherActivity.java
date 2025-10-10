@@ -52,12 +52,17 @@ public class VoucherActivity extends AppCompatActivity implements VoucherAdapter
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         androidx.activity.EdgeToEdge.enable(this);
+        
+        // Set status bar transparent to let gradient show through
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        
         setContentView(R.layout.activity_voucher);
         
         // Handle window insets for edge-to-edge
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             androidx.core.graphics.Insets systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
-            // Let content draw edge-to-edge; apply only sides to root
+            
+            // Apply only sides to root, let header extend under status bar
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
             // Add top inset to header so its background extends under status bar
@@ -65,14 +70,13 @@ public class VoucherActivity extends AppCompatActivity implements VoucherAdapter
             if (header != null) {
                 header.setPadding(
                         header.getPaddingLeft(),
-                        header.getPaddingTop() + systemBars.top,
+                        systemBars.top,
                         header.getPaddingRight(),
                         header.getPaddingBottom()
                 );
             }
 
-            // Bottom inset is handled centrally in NavigationBarUtil
-            return insets;
+            return androidx.core.view.WindowInsetsCompat.CONSUMED;
         });
 
         // Initialize SessionManager
