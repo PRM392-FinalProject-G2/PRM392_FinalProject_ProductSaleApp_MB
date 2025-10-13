@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    android:backgroundTint="#F9FCFF">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="10dp"
+        android:gravity="center_horizontal">
+
+        <!-- Ảnh sản phẩm + icon wishlist -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            android:layout_marginBottom="8dp">
+
+            <!-- Ảnh sản phẩm -->
+            <ImageView
+                android:id="@+id/imgProduct"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerInside"
+                android:adjustViewBounds="true"
+                android:layout_gravity="center" />
+        </FrameLayout>
+        <!-- 💙 Giá ở giữa - Wishlist ở bên phải -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:id="@+id/tvProductPrice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="8.990.000 đồng"
+                android:textColor="#3B82F6"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5" />
+
+                <ImageView
+                android:id="@+id/ivWishlist"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_marginEnd="8dp"
+                android:padding="4dp"
+                android:background="@drawable/bg_wishlist_circle"
+                android:src="@drawable/baseline_favorite_border_24"
+                app:tint="@android:color/holo_red_light"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+        <!-- Tên sản phẩm -->
+        <TextView
+            android:id="@+id/tvProductName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sony WH-1000XM5"
+            android:textColor="#000000"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="2dp" />
+
+            <!-- 📝 Mô tả ở giữa -->
+            <TextView
+                android:id="@+id/tvProductBriefDescription"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tai nghe chống ồn"
+                android:textColor="#777777"
+                android:textSize="12sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5" />
+
+        <!-- 🔸 Hàng hiển thị rating & popularity -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:id="@+id/tvAverageRating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⭐ 0.0"
+                android:textSize="12sp"
+                android:textColor="#FFA500"
+                android:layout_marginEnd="12dp" />
+
+            <TextView
+                android:id="@+id/tvPopularity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔥 700"
+                android:textSize="12sp"
+                android:textColor="#FF4500" />
+        </LinearLayout>
+
+
+
+        <!-- Nút xem chi tiết -->
+        <LinearLayout
+            android:id="@+id/btnDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:padding="6dp"
+            android:background="@drawable/bg_button_chitietsanpham">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🛍️ Chi tiết sản phẩm"
+                android:textColor="#3B82F6"
+                android:textStyle="bold"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
