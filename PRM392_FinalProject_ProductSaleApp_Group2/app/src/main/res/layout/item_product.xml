@@ -50,7 +50,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.5" />
 
-            <ImageView
+                <ImageView
                 android:id="@+id/ivWishlist"
                 android:layout_width="28dp"
                 android:layout_height="28dp"
@@ -77,16 +77,48 @@
             android:gravity="center"
             android:layout_marginBottom="2dp" />
 
-        <!-- Mô tả ngắn -->
-        <TextView
-            android:id="@+id/tvProductBriefDescription"
-            android:layout_width="wrap_content"
+            <!-- 📝 Mô tả ở giữa -->
+            <TextView
+                android:id="@+id/tvProductBriefDescription"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tai nghe chống ồn"
+                android:textColor="#777777"
+                android:textSize="12sp"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5" />
+
+        <!-- 🔸 Hàng hiển thị rating & popularity -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Tai nghe chống ồn"
-            android:textColor="#777777"
-            android:textSize="12sp"
+            android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginTop="6dp"
+            android:layout_marginBottom="6dp">
+
+            <TextView
+                android:id="@+id/tvAverageRating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="⭐ 0.0"
+                android:textSize="12sp"
+                android:textColor="#FFA500"
+                android:layout_marginEnd="12dp" />
+
+            <TextView
+                android:id="@+id/tvPopularity"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔥 700"
+                android:textSize="12sp"
+                android:textColor="#FF4500" />
+        </LinearLayout>
+
+
 
         <!-- Nút xem chi tiết -->
         <LinearLayout

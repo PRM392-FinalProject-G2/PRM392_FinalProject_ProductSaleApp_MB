@@ -22,13 +22,12 @@
         android:id="@+id/headerLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:padding="16dp">
+        android:padding="0dp">
 
         <!-- Nút đóng ở góc trái -->
         <ImageView
             android:id="@+id/btnClose"
-            android:layout_width="24dp"
+            android:layout_width="61dp"
             android:layout_height="24dp"
             android:layout_gravity="start|center_vertical"
             android:contentDescription="Đóng"
