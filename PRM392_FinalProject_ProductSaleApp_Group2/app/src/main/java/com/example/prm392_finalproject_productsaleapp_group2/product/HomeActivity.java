@@ -11,6 +11,9 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -18,6 +21,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.prm392_finalproject_productsaleapp_group2.R;
 import com.example.prm392_finalproject_productsaleapp_group2.net.ApiConfig;
+import com.example.prm392_finalproject_productsaleapp_group2.utils.NavigationBarUtil;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -55,14 +59,32 @@ public class HomeActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
+        
+        // Set status bar transparent to let gradient show through
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        
         setContentView(R.layout.activity_home);
+        
+        // Handle window insets for edge-to-edge display
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
+            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            
+            // Apply only sides to root, let header extend under status bar
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
-    // Xử lý padding cho Edge-to-Edge
-//        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-//            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-//            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-//            return insets;
-//        });
+            // Add top inset to header so its background extends under status bar
+            android.view.View header = findViewById(R.id.header_layout);
+            if (header != null) {
+                header.setPadding(
+                        header.getPaddingLeft(),
+                        systemBars.top,
+                        header.getPaddingRight(),
+                        header.getPaddingBottom()
+                );
+            }
+
+            return WindowInsetsCompat.CONSUMED;
+        });
 
         // Ánh xạ ViewPager
         bannerViewPager = findViewById(R.id.bannerViewPager);
@@ -139,6 +161,16 @@ public class HomeActivity extends AppCompatActivity {
             Intent intent = new Intent(HomeActivity.this, FilterActivity.class);
             startActivity(intent);
         });
+
+        // Setup navigation bar
+        NavigationBarUtil.setupNavigationBar(this);
+        NavigationBarUtil.setActiveNavigationButton(this, "home");
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        NavigationBarUtil.finishActivityWithoutAnimation(this);
     }
 
     @Override
