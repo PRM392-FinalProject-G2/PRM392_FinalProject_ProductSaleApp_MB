@@ -5,6 +5,260 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg_gradient"
     tools:context=".product.ProductDetailActivity">
+
+
+    <FrameLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="50dp"
+        android:padding="12dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Nút quay lại -->
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start|center_vertical"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Quay lại"
+            android:padding="6dp"
+            android:src="@drawable/btn_close"
+            app:tint="@color/black" />
+
+        <!-- Tiêu đề ở giữa tuyệt đối -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="Chi tiết sản phẩm"
+            android:textColor="#000000"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <ScrollView
+        android:id="@+id/scrollViewContent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="16dp"
+        app:layout_constraintBottom_toTopOf="@id/quantityContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/headerLayout">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <!-- Product Image -->
+            <ImageView
+                android:id="@+id/imgProductDetail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:adjustViewBounds="true"
+                android:background="@drawable/bg_scroll_filter"
+                android:elevation="4dp"
+                android:scaleType="fitCenter" />
+
+            <!-- Product Name -->
+            <TextView
+                android:id="@+id/tvProductNameDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <!-- Product Price -->
+            <TextView
+                android:id="@+id/tvProductPriceDetail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="#071AFA"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <!-- Small Specs Card -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:weightSum="3">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <!--                    <ImageView-->
+                    <!--                        android:layout_width="24dp"-->
+                    <!--                        android:layout_height="24dp"-->
+                    <!--                        android:src="@drawable/ic_screen"/>-->
+
+                    <!--                    <TextView-->
+                    <!--                        android:text="6.9 inch"-->
+                    <!--                        android:textSize="12sp"-->
+                    <!--                        android:textColor="#555555"/>-->
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <!--                    <ImageView-->
+                    <!--                        android:layout_width="24dp"-->
+                    <!--                        android:layout_height="24dp"-->
+                    <!--                        android:src="@drawable/ic_battery"/>-->
+
+                    <!--                    <TextView-->
+                    <!--                        android:text="37 giờ"-->
+                    <!--                        android:textSize="12sp"-->
+                    <!--                        android:textColor="#555555"/>-->
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <!--                    <ImageView-->
+                    <!--                        android:layout_width="24dp"-->
+                    <!--                        android:layout_height="24dp"-->
+                    <!--                        android:src="@drawable/ic_nfc"/>-->
+
+                    <!--                    <TextView-->
+                    <!--                        android:text="NFC"-->
+                    <!--                        android:textSize="12sp"-->
+                    <!--                        android:textColor="#555555"/>-->
+                </LinearLayout>
+            </LinearLayout>
+            <!-- Technical Specs -->
+            <TextView
+                android:id="@+id/tvProductSpecsDetail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="#575959"
+                android:textSize="15sp" />
+            <!-- Full Description -->
+            <TextView
+                android:id="@+id/tvProductDescriptionDetail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:textColor="#575959"
+                android:textSize="15sp" />
+
+
+        </LinearLayout>
+    </ScrollView>
+    <!-- Quantity Selector -->
+    <LinearLayout
+        android:id="@+id/quantityContainer"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="16dp"
+        android:background="#F9FCFF"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        app:layout_constraintBottom_toTopOf="@id/btnAddToCart"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <!-- Chữ Số lượng -->
+        <TextView
+            android:id="@+id/tvQuantityLabel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Số lượng"
+            android:textColor="#575959"
+            android:textSize="18sp" />
+
+        <!-- Nút trừ (TextView trong suốt) -->
+        <TextView
+            android:id="@+id/btnDecrease"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="-"
+            android:textColor="#071AFA"
+            android:textSize="30sp" />
+
+        <!-- EditText số lượng -->
+        <EditText
+            android:id="@+id/etQuantity"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:gravity="center"
+            android:inputType="number"
+            android:text="1"
+            android:textColor="#071AFA"
+            android:textSize="16sp" />
+
+        <!-- Nút cộng (TextView trong suốt) -->
+        <TextView
+            android:id="@+id/btnIncrease"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:text="+"
+            android:textColor="#071AFA"
+            android:textSize="20sp" />
+    </LinearLayout>
+
+
+
+    <!-- Add to Cart Button -->
+    <Button
+        android:id="@+id/btnAddToCart"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginBottom="90dp"
+        android:background="@drawable/bg_button"
+        android:textColor="@color/white"
+        app:backgroundTint="@null"
+        android:text="Thêm vào giỏ hàng"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+    <include
+        android:id="@+id/bottom_navigation"
+        layout="@layout/bottom_navigation"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

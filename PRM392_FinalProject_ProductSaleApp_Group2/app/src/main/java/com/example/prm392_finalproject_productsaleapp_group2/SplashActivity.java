@@ -17,6 +17,8 @@ import androidx.core.view.WindowInsetsControllerCompat;
 import com.example.prm392_finalproject_productsaleapp_group2.auth.LoginActivity;
 import com.example.prm392_finalproject_productsaleapp_group2.auth.SessionManager;
 import com.example.prm392_finalproject_productsaleapp_group2.product.HomeActivity;
+import com.example.prm392_finalproject_productsaleapp_group2.services.FCMTokenManager;
+import com.example.prm392_finalproject_productsaleapp_group2.utils.NotificationPermissionHelper;
 
 public class SplashActivity extends AppCompatActivity implements TextureView.SurfaceTextureListener {
 
@@ -43,6 +45,12 @@ public class SplashActivity extends AppCompatActivity implements TextureView.Sur
 
         textureView = findViewById(R.id.videoTexture);
         textureView.setSurfaceTextureListener(this);
+        
+        // Request notification permission (Android 13+)
+        NotificationPermissionHelper.requestPermission(this);
+        
+        // Initialize FCM
+        FCMTokenManager.getInstance(this).initializeFCM();
     }
 
     private void navigateNext() {
