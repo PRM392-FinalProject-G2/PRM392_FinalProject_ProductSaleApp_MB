@@ -1,17 +1,53 @@
 package com.example.prm392_finalproject_productsaleapp_group2.models;
 
+import com.google.gson.annotations.SerializedName;
+import java.util.List;
+
 public class Product {
+    @SerializedName("productId")
     private int productId;
+    
+    @SerializedName("productName")
     private String productName;
+    
+    @SerializedName("briefDescription")
     private String briefDescription;
+    
+    @SerializedName("fullDescription")
     private String fullDescription;
+    
+    @SerializedName("technicalSpecifications")
     private String technicalSpecifications;
+    
+    @SerializedName("price")
     private int price;
-    private String imageUrl;
+    
+    @SerializedName("categoryId")
     private int categoryId;
+    
+    @SerializedName("brandId")
     private int brandId;
+    
+    @SerializedName("popularity")
+    private int popularity;
+    
+    @SerializedName("averageRating")
+    private double averageRating;
+    
+    @SerializedName("reviewCount")
+    private int reviewCount;
+    
+    @SerializedName("category")
     private Category category;
+    
+    @SerializedName("brand")
     private Brand brand;
+    
+    @SerializedName("productImages")
+    private List<ProductImage> productImages;
+    
+    // Legacy field for backward compatibility
+    private String imageUrl;
 
     public Product() {}
 
@@ -101,6 +137,38 @@ public class Product {
 
     public void setBrand(Brand brand) {
         this.brand = brand;
+    }
+
+    public List<ProductImage> getProductImages() {
+        return productImages;
+    }
+
+    public void setProductImages(List<ProductImage> productImages) {
+        this.productImages = productImages;
+    }
+
+    public int getPopularity() {
+        return popularity;
+    }
+
+    public void setPopularity(int popularity) {
+        this.popularity = popularity;
+    }
+
+    public double getAverageRating() {
+        return averageRating;
+    }
+
+    public void setAverageRating(double averageRating) {
+        this.averageRating = averageRating;
+    }
+
+    public int getReviewCount() {
+        return reviewCount;
+    }
+
+    public void setReviewCount(int reviewCount) {
+        this.reviewCount = reviewCount;
     }
 }
 
