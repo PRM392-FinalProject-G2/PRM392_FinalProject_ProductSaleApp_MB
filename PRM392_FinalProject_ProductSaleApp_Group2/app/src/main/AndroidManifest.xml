@@ -68,6 +68,11 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
+            android:name=".order.VnpayWebViewActivity"
+            android:exported="false"
+            android:usesCleartextTraffic="true"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
             android:name=".order.CheckoutFailActivity"
             android:exported="false" />
         <activity

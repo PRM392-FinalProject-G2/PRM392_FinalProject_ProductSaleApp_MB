@@ -12,6 +12,7 @@ public class Product {
     private int brandId;
     private Category category;
     private Brand brand;
+    private java.util.List<ProductImage> productImages;
 
     public Product() {}
 
@@ -101,6 +102,14 @@ public class Product {
 
     public void setBrand(Brand brand) {
         this.brand = brand;
+    }
+
+    public java.util.List<ProductImage> getProductImages() {
+        return productImages;
+    }
+
+    public void setProductImages(java.util.List<ProductImage> productImages) {
+        this.productImages = productImages;
     }
 }
 
