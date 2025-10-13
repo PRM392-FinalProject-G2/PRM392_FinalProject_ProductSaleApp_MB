@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.prm392_finalproject_productsaleapp_group2.R;
 import com.example.prm392_finalproject_productsaleapp_group2.net.ApiConfig;
+import com.example.prm392_finalproject_productsaleapp_group2.utils.NavigationBarUtil;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -45,29 +46,44 @@ public class ListProductActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        
+
         // Set status bar transparent to let gradient show through
         getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
-        
+
         setContentView(R.layout.activity_list_product);
-        
+
         // Handle window insets for edge-to-edge display
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+
+            // Apply only sides to root, let header extend under status bar
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
+
+            // Add top inset to header so its background extends under status bar
+            android.view.View header = findViewById(R.id.header_layout);
+            if (header != null) {
+                header.setPadding(
+                        header.getPaddingLeft(),
+                        systemBars.top,
+                        header.getPaddingRight(),
+                        header.getPaddingBottom());
+            }
+
             return WindowInsetsCompat.CONSUMED;
         });
-        
-        //Đóng trang sản phẩm
+
+        // Đóng trang sản phẩm
         btnBack = findViewById(R.id.btnBack);
         btnBack.setOnClickListener(v -> finish());
-        //Gọi API danh sách sản phẩm
+        // Gọi API danh sách sản phẩm
         rvProducts = findViewById(R.id.rvProductList);
         GridLayoutManager layoutManager = new GridLayoutManager(this, 2);
         rvProducts.setLayoutManager(layoutManager);
 
         productAdapter = new ProductAdapter(productArray);
         rvProducts.setAdapter(productAdapter);
+        // Initialize session for adapter and preload wishlist
+        productAdapter.initSession(this);
 
         // Nhận dữ liệu từ Intent
         categoryId = getIntent().getIntExtra("categoryId", -1);
@@ -102,10 +118,22 @@ public class ListProductActivity extends AppCompatActivity {
                 }
             }
         });
+        // Setup navigation bar
+        NavigationBarUtil.setupNavigationBar(this);
+        NavigationBarUtil.setActiveNavigationButton(this, "home");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (productAdapter != null) {
+            productAdapter.loadWishlistForUser();
+        }
     }
 
     private void loadProductsByCategory(int categoryId, int pageNumber) {
-        if (isLoading || isLastPage) return;
+        if (isLoading || isLastPage)
+            return;
         isLoading = true;
 
         new AsyncTask<Void, Void, Boolean>() {
@@ -117,8 +145,7 @@ public class ListProductActivity extends AppCompatActivity {
                     String urlStr = ApiConfig.endpoint(
                             "/api/Products/filter?CategoryId=" + categoryId +
                                     "&pageNumber=" + pageNumber +
-                                    "&pageSize=" + PAGE_SIZE
-                    );
+                                    "&pageSize=" + PAGE_SIZE);
                     Log.d("LoadPage", "Đang tải trang: " + pageNumber + " -> " + urlStr);
 
                     URL url = new URL(urlStr);
@@ -131,7 +158,8 @@ public class ListProductActivity extends AppCompatActivity {
                         BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                         StringBuilder sb = new StringBuilder();
                         String line;
-                        while ((line = br.readLine()) != null) sb.append(line);
+                        while ((line = br.readLine()) != null)
+                            sb.append(line);
                         br.close();
 
                         JSONObject root = new JSONObject(sb.toString());
@@ -158,14 +186,18 @@ public class ListProductActivity extends AppCompatActivity {
                         productArray.put(newItems.optJSONObject(i));
                     }
                     productAdapter.updateData(productArray);
+                    // preload wishlist mapping for current user
+                    productAdapter.loadWishlistForUser();
 
                 }
-//                else if (isLastPage) {
-//                    Toast.makeText(ListProductActivity.this, "Đã tải hết sản phẩm", Toast.LENGTH_SHORT).show();
-//
-//                } else {
-//                    Toast.makeText(ListProductActivity.this, "Không tải được sản phẩm", Toast.LENGTH_SHORT).show();
-//                }
+                // else if (isLastPage) {
+                // Toast.makeText(ListProductActivity.this, "Đã tải hết sản phẩm",
+                // Toast.LENGTH_SHORT).show();
+                //
+                // } else {
+                // Toast.makeText(ListProductActivity.this, "Không tải được sản phẩm",
+                // Toast.LENGTH_SHORT).show();
+                // }
             }
         }.execute();
     }
