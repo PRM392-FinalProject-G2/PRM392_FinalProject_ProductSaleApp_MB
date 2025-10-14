@@ -60,8 +60,7 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnCar
         setContentView(R.layout.activity_cart);
         
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            // Don't add padding to let gradient extend to status bar
             return WindowInsetsCompat.CONSUMED;
         });
 

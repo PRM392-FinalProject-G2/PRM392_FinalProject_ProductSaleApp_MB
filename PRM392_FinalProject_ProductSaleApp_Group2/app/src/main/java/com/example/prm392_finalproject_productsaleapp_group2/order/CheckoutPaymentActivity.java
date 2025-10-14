@@ -33,6 +33,7 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
     private TextView tvSelectedVoucher;
     private Button btnChooseVoucher;
     private EditText etBillingAddress, etPhone;
+    private TextView tvUsername, tvEmail;
     private SessionManager sessionManager;
     private int userId;
     private int cartId;
@@ -53,8 +54,7 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
         setContentView(R.layout.activity_checkout_payment);
         
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            // Don't add padding to let gradient extend to status bar
             return WindowInsetsCompat.CONSUMED;
         });
 
@@ -67,6 +67,8 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
         btnChooseVoucher = findViewById(R.id.btn_choose_voucher);
         etBillingAddress = findViewById(R.id.et_billing_address);
         etPhone = findViewById(R.id.et_phone);
+        tvUsername = findViewById(R.id.tv_username);
+        tvEmail = findViewById(R.id.tv_email);
 
         cartAdapter = new CheckoutCartAdapter(cartItems);
         rvCartItems.setLayoutManager(new LinearLayoutManager(this));
@@ -149,6 +151,16 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
                     public void onResponse(retrofit2.Call<com.example.prm392_finalproject_productsaleapp_group2.models.UserResponse> call, retrofit2.Response<com.example.prm392_finalproject_productsaleapp_group2.models.UserResponse> response) {
                         if (response.isSuccessful() && response.body()!=null) {
                             com.example.prm392_finalproject_productsaleapp_group2.models.UserResponse u = response.body();
+                            
+                            // Set username and email
+                            if (u.getUsername() != null) {
+                                tvUsername.setText(u.getUsername());
+                            }
+                            if (u.getEmail() != null) {
+                                tvEmail.setText(u.getEmail());
+                            }
+                            
+                            // Set address and phone if empty
                             if (u.getAddress()!=null && etBillingAddress.getText().toString().trim().isEmpty()) {
                                 etBillingAddress.setText(u.getAddress());
                             }

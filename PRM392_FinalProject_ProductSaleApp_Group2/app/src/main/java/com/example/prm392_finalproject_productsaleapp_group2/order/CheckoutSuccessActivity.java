@@ -23,8 +23,7 @@ public class CheckoutSuccessActivity extends AppCompatActivity {
         setContentView(R.layout.activity_checkout_success);
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            // Don't add padding to let gradient extend to status bar
             return WindowInsetsCompat.CONSUMED;
         });
 
