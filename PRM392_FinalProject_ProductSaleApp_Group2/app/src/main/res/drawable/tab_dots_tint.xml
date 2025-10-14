@@ -1,6 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:state_selected="true" android:color="#FFFFFFFF"/>
-    <item android:color="#B3FFFFFF"/>
+    <!-- Màu đen đậm khi được chọn -->
+    <item android:state_selected="true" android:color="#FF000000"/>
+    <!-- Màu đen nhạt khi chưa được chọn -->
+    <item android:color="#66000000"/>
 </selector>
-

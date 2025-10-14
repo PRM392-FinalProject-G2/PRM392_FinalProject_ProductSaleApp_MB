@@ -5,6 +5,8 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.inputmethod.EditorInfo;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -20,87 +22,142 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.prm392_finalproject_productsaleapp_group2.R;
-import com.example.prm392_finalproject_productsaleapp_group2.net.ApiConfig;
+import com.example.prm392_finalproject_productsaleapp_group2.auth.SessionManager;
+import com.example.prm392_finalproject_productsaleapp_group2.models.Category;
+import com.example.prm392_finalproject_productsaleapp_group2.models.FilterResponse;
+import com.example.prm392_finalproject_productsaleapp_group2.models.Product;
+import com.example.prm392_finalproject_productsaleapp_group2.models.ProductFilterBM;
+import com.example.prm392_finalproject_productsaleapp_group2.net.CategoryApiClient;
+import com.example.prm392_finalproject_productsaleapp_group2.net.ProductApiClient;
+import com.example.prm392_finalproject_productsaleapp_group2.services.CategoryApiService;
+import com.example.prm392_finalproject_productsaleapp_group2.services.ProductApiService;
 import com.example.prm392_finalproject_productsaleapp_group2.utils.NavigationBarUtil;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HomeActivity extends AppCompatActivity {
 
+    //region --- UI Components ---
     private ViewPager2 bannerViewPager;
+    private ImageView btnFilter;
+    private RecyclerView rvCategory;
+    private RecyclerView rvProduct;
+    private EditText etSearch; // thêm dòng này trên cùng với các biến UI
+
+    //endregion
+
+    //region --- Banner ---
     private Handler handler;
-    private int currentPageBanner = 0;
     private Runnable bannerRunnable;
-    private List<Integer> bannerImages = Arrays.asList(
-            R.drawable.sample_banner, // thay bằng ảnh của bạn
+    private int currentPageBanner = 0;
+    private final List<Integer> bannerImages = Arrays.asList(
+            R.drawable.sample_banner,
             R.drawable.sample_banner2,
             R.drawable.sample_banner3,
-            R.drawable.sample_banner4);
+            R.drawable.sample_banner4
+    );
+    //endregion
 
+    //region --- Product Pagination ---
     private int currentPageProduct = 1;
+    private final int PAGE_SIZE = 10;
     private boolean isLoading = false;
     private boolean isLastPage = false;
-    private final int PAGE_SIZE = 10;
-    private ProductAdapter adapter_product;
+    //endregion
 
-    private ImageView btnFilter;
+    //region --- Adapters & Services ---
+    private ProductAdapter adapterProduct;
+    private CategoryAdapter adapterCategory;
+    private ProductApiService productService;
+    private CategoryApiService categoryService;
+    private SessionManager sessionManager;
+    //endregion
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
 
-        // Set status bar transparent to let gradient show through
+        // Transparent status bar
         getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
-
         setContentView(R.layout.activity_home);
 
-        // Handle window insets for edge-to-edge display
+        setupWindowInsets();
+        initViews();
+        initServices();
+        setupBanner();
+        setupCategories();
+        setupProducts();
+        setupFilterButton();
+        setupNavigationBar();
+    }
+
+    //region --- Initialization ---
+    private void setupWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-
-            // Apply only sides to root, let header extend under status bar
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
-            // Add top inset to header so its background extends under status bar
             android.view.View header = findViewById(R.id.header_layout);
             if (header != null) {
                 header.setPadding(
                         header.getPaddingLeft(),
                         systemBars.top,
                         header.getPaddingRight(),
-                        header.getPaddingBottom());
+                        header.getPaddingBottom()
+                );
             }
-
             return WindowInsetsCompat.CONSUMED;
         });
+    }
 
-        // Ánh xạ ViewPager
+    private void initViews() {
         bannerViewPager = findViewById(R.id.bannerViewPager);
-        BannerAdapter adapter_banner = new BannerAdapter(bannerImages);
-        bannerViewPager.setAdapter(adapter_banner);
+        btnFilter = findViewById(R.id.btnFilter);
+        rvCategory = findViewById(R.id.rvCategory);
+        rvProduct = findViewById(R.id.rvFeaturedProducts);
+        etSearch = findViewById(R.id.etSearch); // ánh xạ EditText
+        // Xử lý khi người dùng nhấn phím "Search" trên bàn phím
+        etSearch.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                String keyword = etSearch.getText().toString().trim();
+                if (!keyword.isEmpty()) {
+                    openListProductBySearch(keyword);
+                } else {
+                    Toast.makeText(this, "Vui lòng nhập từ khóa tìm kiếm", Toast.LENGTH_SHORT).show();
+                }
+                return true;
+            }
+            return false;
+        });
+    }
 
-        // Tạo handler và runnable cho auto-slide
+    private void initServices() {
+        sessionManager = new SessionManager(this);
+        productService = ProductApiClient.getInstance().getApiService();
+        categoryService = CategoryApiClient.getInstance().getApiService();
+    }
+    //endregion
+
+    //region --- Banner setup ---
+    private void setupBanner() {
+        BannerAdapter adapterBanner = new BannerAdapter(bannerImages);
+        bannerViewPager.setAdapter(adapterBanner);
+
         handler = new Handler(Looper.getMainLooper());
         bannerRunnable = () -> {
             currentPageBanner = (currentPageBanner + 1) % bannerImages.size();
             bannerViewPager.setCurrentItem(currentPageBanner, true);
-            handler.postDelayed(bannerRunnable, 3000); // đổi ảnh sau 3s
+            handler.postDelayed(bannerRunnable, 3000);
         };
 
-        // Bắt đầu auto-slide
         handler.postDelayed(bannerRunnable, 3000);
 
-        // Nếu người dùng vuốt tay thì reset timer
         bannerViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
@@ -109,36 +166,73 @@ public class HomeActivity extends AppCompatActivity {
                 handler.postDelayed(bannerRunnable, 3000);
             }
         });
-        // Category
-        RecyclerView rvCategory = findViewById(R.id.rvCategory);
-        List<JSONObject> categoryList = new ArrayList<>();
-        CategoryAdapter adapter_category = new CategoryAdapter(categoryList);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-        rvCategory.setLayoutManager(layoutManager);
-        rvCategory.setAdapter(adapter_category);
-        // Gọi hàm tải danh mục
-        loadCategories(categoryList, adapter_category);
+    }
+    //endregion
 
-        // Sản phẩm nổi bật
-        RecyclerView rvProduct = findViewById(R.id.rvFeaturedProducts);
-        JSONArray[] productArray = new JSONArray[] { new JSONArray() };
-        adapter_product = new ProductAdapter(productArray[0]);
-        rvProduct.setLayoutManager(new GridLayoutManager(this, 2)); // 2 sản phẩm / hàng
-        rvProduct.setAdapter(adapter_product);
-        adapter_product.initSession(this);
+    //region --- Category setup ---
+    private void setupCategories() {
+        List<Category> categoryList = new ArrayList<>();
+        adapterCategory = new CategoryAdapter(categoryList);
+        rvCategory.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        rvCategory.setAdapter(adapterCategory);
 
-        // Gọi API đầu tiên lấy sản phẩm
-        loadProducts(productArray, adapter_product, currentPageProduct);
+        loadCategories(categoryList);
+    }
 
-        // Gắn sự kiện cuộn để load thêm khi gần cuối danh sách
+    private void loadCategories(List<Category> categoryList) {
+        String token = sessionManager.getAuthToken();
+        if (token == null || token.isEmpty()) {
+            Toast.makeText(this, "Không tìm thấy access token", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String accessToken = "Bearer " + token;
+
+        categoryService.getCategories(accessToken).enqueue(new Callback<FilterResponse<Category>>() {
+            @Override
+            public void onResponse(Call<FilterResponse<Category>> call, Response<FilterResponse<Category>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    // ✅ Lấy danh sách categories từ response
+                    List<Category> categories = response.body().getItems();
+
+                    categoryList.clear();
+                    categoryList.addAll(categories);
+                    adapterCategory.notifyDataSetChanged();
+                } else {
+                    Toast.makeText(HomeActivity.this, "Không tải được danh mục", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<FilterResponse<Category>> call, Throwable t) {
+                t.printStackTrace();
+                Toast.makeText(HomeActivity.this, "Lỗi kết nối server", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    //endregion
+
+    //region --- Product setup ---
+    private void setupProducts() {
+        List<Product> productList = new ArrayList<>();
+        adapterProduct = new ProductAdapter(productList);
+        adapterProduct.initSession(this);
+
+        rvProduct.setLayoutManager(new GridLayoutManager(this, 2));
+        rvProduct.setAdapter(adapterProduct);
+
+        loadProducts(productList, currentPageProduct);
+        setupProductScrollListener(productList);
+    }
+
+    private void setupProductScrollListener(List<Product> productList) {
         rvProduct.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
 
                 GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-                if (layoutManager == null)
-                    return;
+                if (layoutManager == null) return;
 
                 int visibleItemCount = layoutManager.getChildCount();
                 int totalItemCount = layoutManager.getItemCount();
@@ -147,31 +241,96 @@ public class HomeActivity extends AppCompatActivity {
                 if (!isLoading && !isLastPage) {
                     if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 2
                             && firstVisibleItemPosition >= 0) {
-                        // Gần cuối danh sách -> tải thêm trang mới
                         currentPageProduct++;
-                        loadProducts(productArray, adapter_product, currentPageProduct);
+                        loadProducts(productList, currentPageProduct);
                     }
                 }
             }
         });
-        btnFilter = findViewById(R.id.btnFilter);
-        // Filter
+    }
+    private void loadProducts(List<Product> productList, int pageNumber) {
+        if (isLoading || isLastPage) return;
+        isLoading = true;
+
+        String token = sessionManager.getAuthToken();
+        if (token == null || token.isEmpty()) {
+            Toast.makeText(this, "Không tìm thấy access token", Toast.LENGTH_SHORT).show();
+            isLoading = false;
+            return;
+        }
+        String accessToken = "Bearer " + token;
+
+        // Gọi API
+        Call<FilterResponse<Product>> call = productService.getProducts(accessToken, pageNumber, PAGE_SIZE);
+
+        call.enqueue(new retrofit2.Callback<FilterResponse<Product>>() {
+            @Override
+            public void onResponse(Call<FilterResponse<Product>> call, retrofit2.Response<FilterResponse<Product>> response) {
+                isLoading = false;
+                if (response.isSuccessful() && response.body() != null) {
+                    List<Product> newItems = response.body().getItems();
+
+                    if (newItems == null || newItems.isEmpty()) {
+                        isLastPage = true;
+                        return;
+                    }
+
+                    productList.addAll(newItems);
+                    adapterProduct.updateData(productList);
+                } else {
+                    Toast.makeText(HomeActivity.this, "Không tải được sản phẩm (" + response.code() + ")", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<FilterResponse<Product>> call, Throwable t) {
+                isLoading = false;
+                t.printStackTrace();
+                Toast.makeText(HomeActivity.this, "Lỗi kết nối server", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    //endregion
+    //region --- Search ---
+
+    private void openListProductBySearch(String keyword) {
+        Intent intent = new Intent(this, ListProductActivity.class);
+
+        // Tạo bộ lọc cơ bản (chỉ có từ khóa)
+        ProductFilterBM filter = new ProductFilterBM();
+        filter.Search = keyword; // Thêm thuộc tính Search trong model ProductFilterBM nếu chưa có
+
+        intent.putExtra("productFilter", filter);
+        startActivity(intent);
+    }
+
+    //endregion
+
+    //region --- Filter & Navigation ---
+    private void setupFilterButton() {
         btnFilter.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, FilterActivity.class);
+
+            // Nếu user đã nhập keyword trong ô tìm kiếm
+            String keyword = etSearch.getText().toString().trim();
+            if (!keyword.isEmpty()) {
+                ProductFilterBM currentFilter = new ProductFilterBM();
+                currentFilter.Search = keyword;
+                intent.putExtra("productFilter", currentFilter);
+            }
+
             startActivity(intent);
         });
+    }
 
-        // Setup navigation bar
+    private void setupNavigationBar() {
         NavigationBarUtil.setupNavigationBar(this);
         NavigationBarUtil.setActiveNavigationButton(this, "home");
     }
+    //endregion
 
-    @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        NavigationBarUtil.finishActivityWithoutAnimation(this);
-    }
-
+    //region --- Lifecycle ---
     @Override
     protected void onPause() {
         super.onPause();
@@ -181,114 +340,16 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (adapter_product != null) {
-            adapter_product.loadWishlistForUser();
+        if (adapterProduct != null) {
+            adapterProduct.loadWishlistForUser();
         }
         handler.postDelayed(bannerRunnable, 3000);
     }
 
-    private void loadCategories(List<JSONObject> categoryList, CategoryAdapter adapter_category) {
-        new AsyncTask<Void, Void, Boolean>() {
-            @Override
-            protected Boolean doInBackground(Void... voids) {
-                try {
-                    URL url = new URL(ApiConfig.endpoint("/api/Categories/filter"));
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setRequestProperty("Accept", "application/json");
-
-                    int code = conn.getResponseCode();
-                    if (code >= 200 && code < 300) {
-                        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        StringBuilder sb = new StringBuilder();
-                        String line;
-                        while ((line = br.readLine()) != null)
-                            sb.append(line);
-                        br.close();
-
-                        JSONObject root = new JSONObject(sb.toString());
-                        JSONArray items = root.getJSONArray("items");
-
-                        categoryList.clear();
-                        for (int i = 0; i < items.length(); i++) {
-                            categoryList.add(items.getJSONObject(i));
-                        }
-                        return true;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                return false;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean success) {
-                if (success)
-                    adapter_category.notifyDataSetChanged();
-                else
-                    Toast.makeText(HomeActivity.this, "Không tải được danh mục", Toast.LENGTH_SHORT).show();
-            }
-        }.execute();
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        NavigationBarUtil.finishActivityWithoutAnimation(this);
     }
-
-    private void loadProducts(JSONArray[] productArray, ProductAdapter adapter_product, int pageNumber) {
-        if (isLoading || isLastPage)
-            return;
-        isLoading = true;
-
-        new AsyncTask<Void, Void, Boolean>() {
-            JSONArray newItems;
-
-            @Override
-            protected Boolean doInBackground(Void... voids) {
-                try {
-                    URL url = new URL(ApiConfig.endpoint("/api/Products/filter?pageNumber=" + pageNumber +
-                            "&pageSize=" + PAGE_SIZE));
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setRequestProperty("Accept", "application/json");
-
-                    int code = conn.getResponseCode();
-                    if (code >= 200 && code < 300) {
-                        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        StringBuilder sb = new StringBuilder();
-                        String line;
-                        while ((line = br.readLine()) != null)
-                            sb.append(line);
-                        br.close();
-
-                        JSONObject root = new JSONObject(sb.toString());
-                        newItems = root.getJSONArray("items");
-                        // Nếu không có thêm dữ liệu thì đánh dấu là trang cuối
-                        if (newItems.length() == 0)
-                            isLastPage = true;
-                        return true;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                return false;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean success) {
-                isLoading = false;
-                if (success && newItems != null && newItems.length() > 0) {
-                    // Nối thêm vào mảng cũ
-                    for (int i = 0; i < newItems.length(); i++) {
-                        productArray[0].put(newItems.optJSONObject(i));
-                    }
-                    adapter_product.updateData(productArray[0]);
-                }
-                // else if (isLastPage) {
-                // Toast.makeText(HomeActivity.this, "Đã tải hết sản phẩm",
-                // Toast.LENGTH_SHORT).show();
-                // } else {
-                // Toast.makeText(HomeActivity.this, "Không tải được sản phẩm",
-                // Toast.LENGTH_SHORT).show();
-                // }
-            }
-        }.execute();
-    }
-
+    //endregion
 }
