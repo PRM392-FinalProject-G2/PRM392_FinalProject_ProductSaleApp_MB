@@ -41,7 +41,7 @@ public class HomeActivity extends AppCompatActivity {
     private int currentPageBanner = 0;
     private Runnable bannerRunnable;
     private List<Integer> bannerImages = Arrays.asList(
-            R.drawable.sample_banner,   // thay bằng ảnh của bạn
+            R.drawable.sample_banner, // thay bằng ảnh của bạn
             R.drawable.sample_banner2,
             R.drawable.sample_banner3,
             R.drawable.sample_banner4);
@@ -50,25 +50,24 @@ public class HomeActivity extends AppCompatActivity {
     private boolean isLoading = false;
     private boolean isLastPage = false;
     private final int PAGE_SIZE = 10;
+    private ProductAdapter adapter_product;
 
     private ImageView btnFilter;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        
+
         // Set status bar transparent to let gradient show through
         getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
-        
+
         setContentView(R.layout.activity_home);
-        
+
         // Handle window insets for edge-to-edge display
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            
+
             // Apply only sides to root, let header extend under status bar
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
@@ -79,8 +78,7 @@ public class HomeActivity extends AppCompatActivity {
                         header.getPaddingLeft(),
                         systemBars.top,
                         header.getPaddingRight(),
-                        header.getPaddingBottom()
-                );
+                        header.getPaddingBottom());
             }
 
             return WindowInsetsCompat.CONSUMED;
@@ -115,31 +113,32 @@ public class HomeActivity extends AppCompatActivity {
         RecyclerView rvCategory = findViewById(R.id.rvCategory);
         List<JSONObject> categoryList = new ArrayList<>();
         CategoryAdapter adapter_category = new CategoryAdapter(categoryList);
-        LinearLayoutManager layoutManager =
-                new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
         rvCategory.setLayoutManager(layoutManager);
         rvCategory.setAdapter(adapter_category);
         // Gọi hàm tải danh mục
         loadCategories(categoryList, adapter_category);
 
-        //Sản phẩm nổi bật
+        // Sản phẩm nổi bật
         RecyclerView rvProduct = findViewById(R.id.rvFeaturedProducts);
-        JSONArray[] productArray = new JSONArray[]{new JSONArray()};
-        ProductAdapter adapter_product = new ProductAdapter(productArray[0]);
+        JSONArray[] productArray = new JSONArray[] { new JSONArray() };
+        adapter_product = new ProductAdapter(productArray[0]);
         rvProduct.setLayoutManager(new GridLayoutManager(this, 2)); // 2 sản phẩm / hàng
         rvProduct.setAdapter(adapter_product);
+        adapter_product.initSession(this);
 
         // Gọi API đầu tiên lấy sản phẩm
         loadProducts(productArray, adapter_product, currentPageProduct);
 
-        //  Gắn sự kiện cuộn để load thêm khi gần cuối danh sách
+        // Gắn sự kiện cuộn để load thêm khi gần cuối danh sách
         rvProduct.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 super.onScrolled(recyclerView, dx, dy);
 
                 GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-                if (layoutManager == null) return;
+                if (layoutManager == null)
+                    return;
 
                 int visibleItemCount = layoutManager.getChildCount();
                 int totalItemCount = layoutManager.getItemCount();
@@ -148,7 +147,7 @@ public class HomeActivity extends AppCompatActivity {
                 if (!isLoading && !isLastPage) {
                     if ((visibleItemCount + firstVisibleItemPosition) >= totalItemCount - 2
                             && firstVisibleItemPosition >= 0) {
-                        //  Gần cuối danh sách -> tải thêm trang mới
+                        // Gần cuối danh sách -> tải thêm trang mới
                         currentPageProduct++;
                         loadProducts(productArray, adapter_product, currentPageProduct);
                     }
@@ -156,7 +155,7 @@ public class HomeActivity extends AppCompatActivity {
             }
         });
         btnFilter = findViewById(R.id.btnFilter);
-        //Filter
+        // Filter
         btnFilter.setOnClickListener(v -> {
             Intent intent = new Intent(HomeActivity.this, FilterActivity.class);
             startActivity(intent);
@@ -182,6 +181,9 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        if (adapter_product != null) {
+            adapter_product.loadWishlistForUser();
+        }
         handler.postDelayed(bannerRunnable, 3000);
     }
 
@@ -200,7 +202,8 @@ public class HomeActivity extends AppCompatActivity {
                         BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                         StringBuilder sb = new StringBuilder();
                         String line;
-                        while ((line = br.readLine()) != null) sb.append(line);
+                        while ((line = br.readLine()) != null)
+                            sb.append(line);
                         br.close();
 
                         JSONObject root = new JSONObject(sb.toString());
@@ -220,14 +223,17 @@ public class HomeActivity extends AppCompatActivity {
 
             @Override
             protected void onPostExecute(Boolean success) {
-                if (success) adapter_category.notifyDataSetChanged();
-                else Toast.makeText(HomeActivity.this, "Không tải được danh mục", Toast.LENGTH_SHORT).show();
+                if (success)
+                    adapter_category.notifyDataSetChanged();
+                else
+                    Toast.makeText(HomeActivity.this, "Không tải được danh mục", Toast.LENGTH_SHORT).show();
             }
         }.execute();
     }
 
     private void loadProducts(JSONArray[] productArray, ProductAdapter adapter_product, int pageNumber) {
-        if (isLoading || isLastPage) return;
+        if (isLoading || isLastPage)
+            return;
         isLoading = true;
 
         new AsyncTask<Void, Void, Boolean>() {
@@ -247,13 +253,15 @@ public class HomeActivity extends AppCompatActivity {
                         BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
                         StringBuilder sb = new StringBuilder();
                         String line;
-                        while ((line = br.readLine()) != null) sb.append(line);
+                        while ((line = br.readLine()) != null)
+                            sb.append(line);
                         br.close();
 
                         JSONObject root = new JSONObject(sb.toString());
                         newItems = root.getJSONArray("items");
                         // Nếu không có thêm dữ liệu thì đánh dấu là trang cuối
-                        if (newItems.length() == 0) isLastPage = true;
+                        if (newItems.length() == 0)
+                            isLastPage = true;
                         return true;
                     }
                 } catch (Exception e) {
@@ -271,15 +279,16 @@ public class HomeActivity extends AppCompatActivity {
                         productArray[0].put(newItems.optJSONObject(i));
                     }
                     adapter_product.updateData(productArray[0]);
-                 }
-//                else if (isLastPage) {
-//                    Toast.makeText(HomeActivity.this, "Đã tải hết sản phẩm", Toast.LENGTH_SHORT).show();
-//                } else {
-//                    Toast.makeText(HomeActivity.this, "Không tải được sản phẩm", Toast.LENGTH_SHORT).show();
-//                }
+                }
+                // else if (isLastPage) {
+                // Toast.makeText(HomeActivity.this, "Đã tải hết sản phẩm",
+                // Toast.LENGTH_SHORT).show();
+                // } else {
+                // Toast.makeText(HomeActivity.this, "Không tải được sản phẩm",
+                // Toast.LENGTH_SHORT).show();
+                // }
             }
         }.execute();
     }
-
 
 }
