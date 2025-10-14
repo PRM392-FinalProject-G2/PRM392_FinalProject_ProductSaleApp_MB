@@ -40,6 +40,7 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
     private CheckoutCartAdapter cartAdapter;
     private Integer selectedVoucherId;
     private String lastPaymentUrl; // cache to switch button behavior
+    private boolean hasConfirmed = false; // chặn chọn voucher sau khi xác nhận
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,7 +72,13 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
         rvCartItems.setLayoutManager(new LinearLayoutManager(this));
         rvCartItems.setAdapter(cartAdapter);
 
-        btnChooseVoucher.setOnClickListener(v -> openVoucherDialog());
+        btnChooseVoucher.setOnClickListener(v -> {
+            if (hasConfirmed) {
+                Toast.makeText(this, "Đã xác nhận thanh toán, không thể chọn voucher", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            openVoucherDialog();
+        });
         findViewById(R.id.btn_pay).setOnClickListener(v -> onPayButtonClick());
 
         loadCart();
@@ -87,7 +94,11 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
             startActivity(intent);
         } else {
             // First click: create order then switch label
-            createOrderAndShowVnpay();
+            // Chặn voucher về sau
+            hasConfirmed = true;
+            if (btnChooseVoucher != null) btnChooseVoucher.setEnabled(false);
+            // Hiệu ứng loading giả 2s rồi mới gọi create-order (giữ nguyên logic cũ sau đó)
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::createOrderAndShowVnpay, 2000);
         }
     }
 
@@ -186,6 +197,11 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
             UserVoucher selected = vouchers.get(which);
             selectedVoucherId = selected.getVoucherId();
             tvSelectedVoucher.setText("Voucher: " + items[which]);
+        });
+        builder.setNeutralButton("Bỏ chọn", (dialog, which) -> {
+            // Clear voucher selection
+            selectedVoucherId = null;
+            tvSelectedVoucher.setText("Chưa chọn voucher");
         });
         builder.setNegativeButton("Đóng", null);
         builder.show();

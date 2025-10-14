@@ -55,3 +55,4 @@ public class ProductImage {
         isPrimary = primary;
     }
 }
+

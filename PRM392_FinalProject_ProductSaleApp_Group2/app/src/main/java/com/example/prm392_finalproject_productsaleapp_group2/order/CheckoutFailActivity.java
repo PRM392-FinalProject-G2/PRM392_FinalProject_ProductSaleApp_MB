@@ -30,9 +30,13 @@ public class CheckoutFailActivity extends AppCompatActivity {
 
         Button back = findViewById(R.id.btn_back_to_order);
         if (back != null) back.setOnClickListener(v -> {
-            // Quay lại giỏ hàng
+            android.content.Intent intent = new android.content.Intent(
+                    CheckoutFailActivity.this,
+                    com.example.prm392_finalproject_productsaleapp_group2.cart.CartActivity.class
+            );
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_CLEAR_TOP | android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
             finish();
-            // Optionally: startActivity(new Intent(this, com.example.prm392_finalproject_productsaleapp_group2.cart.CartActivity.class));
         });
     }
 }
