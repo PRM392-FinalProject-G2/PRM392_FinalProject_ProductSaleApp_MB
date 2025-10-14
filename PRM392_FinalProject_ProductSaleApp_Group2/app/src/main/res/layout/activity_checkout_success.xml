@@ -8,7 +8,7 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="160dp"
+        android:layout_height="100dp"
         android:background="@drawable/bg_header_gradient"
         android:paddingLeft="16dp"
         android:paddingRight="16dp"
@@ -22,11 +22,22 @@
             android:textStyle="bold"
             android:textSize="20sp"/>
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="36dp"
+            android:text="TechZone"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:alpha="0.9"/>
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|bottom"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             android:orientation="horizontal">
             <View android:layout_width="56dp" android:layout_height="6dp" android:background="#FFFFFF" android:alpha="0.5" android:layout_marginEnd="8dp"/>
             <View android:layout_width="56dp" android:layout_height="6dp" android:background="#FFFFFF" android:alpha="0.9" android:layout_marginEnd="8dp"/>
@@ -66,7 +77,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Chúng tôi đã gửi cho bạn một email với đầy đủ về việc giao hàng, vì vậy hãy chú ý theo dõi nhé!"
+                android:text="Cảm ơn bạn đã mua hàng của chúng tôi, chúng tôi sẽ thông báo về việc giao hàng, vì vậy hãy chú ý theo dõi nhé!"
                 android:textColor="#6B7280"
                 android:gravity="center"
                 android:layout_marginTop="12dp"/>

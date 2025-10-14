@@ -8,7 +8,7 @@
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="160dp"
+        android:layout_height="100dp"
         android:background="@drawable/bg_header_gradient"
         android:paddingLeft="16dp"
         android:paddingRight="16dp"
@@ -22,11 +22,22 @@
             android:textStyle="bold"
             android:textSize="20sp"/>
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="36dp"
+            android:text="TechZone"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:alpha="0.9"/>
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal|bottom"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             android:orientation="horizontal">
             <View android:layout_width="56dp" android:layout_height="6dp" android:background="#FFFFFF" android:alpha="0.5" android:layout_marginEnd="8dp"/>
             <View android:layout_width="56dp" android:layout_height="6dp" android:background="#FFFFFF" android:alpha="0.9" android:layout_marginEnd="8dp"/>
