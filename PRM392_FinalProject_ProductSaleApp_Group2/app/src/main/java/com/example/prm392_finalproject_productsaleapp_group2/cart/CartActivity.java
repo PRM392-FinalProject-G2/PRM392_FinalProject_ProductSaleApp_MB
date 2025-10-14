@@ -1,6 +1,7 @@
 package com.example.prm392_finalproject_productsaleapp_group2.cart;
 
 import android.os.Bundle;
+import android.content.Intent;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -24,6 +25,8 @@ import com.example.prm392_finalproject_productsaleapp_group2.models.CartItem;
 import com.example.prm392_finalproject_productsaleapp_group2.models.CartResponse;
 import com.example.prm392_finalproject_productsaleapp_group2.net.CartApiClient;
 import com.example.prm392_finalproject_productsaleapp_group2.services.CartApiService;
+import com.example.prm392_finalproject_productsaleapp_group2.product.ProductDetailActivity;
+import com.example.prm392_finalproject_productsaleapp_group2.order.CheckoutPaymentActivity;
 import com.example.prm392_finalproject_productsaleapp_group2.utils.NavigationBarUtil;
 
 import java.text.NumberFormat;
@@ -88,8 +91,26 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnCar
         btnBuyNow = findViewById(R.id.btn_buy_now);
         
         btnBuyNow.setOnClickListener(v -> {
-            // TODO: Triển khai chức năng thanh toán
-            Toast.makeText(this, "Chức năng thanh toán sẽ được triển khai", Toast.LENGTH_SHORT).show();
+            if (cartItems.isEmpty()) {
+                Toast.makeText(this, "Giỏ hàng trống", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            // Pass first cart's id and totals
+            int totalQuantity = 0;
+            int totalPrice = 0;
+            for (CartItem item : cartItems) {
+                totalQuantity += item.getQuantity();
+                totalPrice += item.getPrice() * item.getQuantity();
+            }
+
+            Intent intent = new Intent(this, CheckoutPaymentActivity.class);
+            intent.putExtra("totalQuantity", totalQuantity);
+            intent.putExtra("totalPrice", totalPrice);
+            // cartId is from first item's cartId (all items are same cart)
+            if (!cartItems.isEmpty()) {
+                intent.putExtra("cartId", cartItems.get(0).getCartId());
+            }
+            startActivity(intent);
         });
     }
 
@@ -238,8 +259,24 @@ public class CartActivity extends AppCompatActivity implements CartAdapter.OnCar
 
     @Override
     public void onItemDetailsClick(CartItem cartItem) {
-        // TODO: Chuyển đến trang chi tiết sản phẩm
-        Toast.makeText(this, "Xem chi tiết: " + cartItem.getProduct().getProductName(), Toast.LENGTH_SHORT).show();
+        int productId = cartItem.getProductId();
+        if (productId > 0) {
+            Intent intent = new Intent(this, ProductDetailActivity.class);
+            intent.putExtra("productId", productId);
+            startActivity(intent);
+        } else if (cartItem.getProduct() != null) {
+            // Fallback if productId missing but product object exists
+            int pid = cartItem.getProduct().getProductId();
+            if (pid > 0) {
+                Intent intent = new Intent(this, ProductDetailActivity.class);
+                intent.putExtra("productId", pid);
+                startActivity(intent);
+                return;
+            }
+            Toast.makeText(this, "Không tìm thấy mã sản phẩm", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(this, "Không tìm thấy mã sản phẩm", Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

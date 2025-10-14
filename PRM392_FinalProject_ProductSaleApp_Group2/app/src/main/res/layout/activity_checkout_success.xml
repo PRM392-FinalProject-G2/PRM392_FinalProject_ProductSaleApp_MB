@@ -1,10 +1,96 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".order.CheckoutSuccessActivity">
+    android:orientation="vertical"
+    android:background="#F6F8FB">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:background="@drawable/bg_header_gradient"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:paddingTop="12dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Thanh toán"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="20sp"/>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|bottom"
+            android:layout_marginBottom="16dp"
+            android:orientation="horizontal">
+            <View android:layout_width="56dp" android:layout_height="6dp" android:background="#FFFFFF" android:alpha="0.5" android:layout_marginEnd="8dp"/>
+            <View android:layout_width="56dp" android:layout_height="6dp" android:background="#FFFFFF" android:alpha="0.9" android:layout_marginEnd="8dp"/>
+            <View android:layout_width="56dp" android:layout_height="6dp" android:background="#FFFFFF" android:alpha="1"/>
+        </LinearLayout>
+    </FrameLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <ImageView
+                android:layout_width="311dp"
+                android:layout_height="280dp"
+                android:layout_gravity="center_horizontal"
+                android:contentDescription="payment_success"
+                android:src="@drawable/paymentsucess" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Thanh toán thành công"
+                android:textStyle="bold"
+                android:textSize="20sp"
+                android:textColor="#111827"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="16dp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Chúng tôi đã gửi cho bạn một email với đầy đủ về việc giao hàng, vì vậy hãy chú ý theo dõi nhé!"
+                android:textColor="#6B7280"
+                android:gravity="center"
+                android:layout_marginTop="12dp"/>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_track_order"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Theo dõi đơn hàng"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/bg_button_gradient"
+                android:layout_marginTop="24dp"/>
+
+            <Button
+                android:id="@+id/btn_continue_shopping"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:text="Tiếp tục mua sắm"
+                android:textStyle="bold"
+                android:textColor="#111827"
+                android:background="@drawable/bg_button_outline"
+                android:layout_marginTop="12dp"/>
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>
