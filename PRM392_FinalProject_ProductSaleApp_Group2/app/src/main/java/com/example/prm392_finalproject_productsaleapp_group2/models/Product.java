@@ -45,6 +45,9 @@ public class Product {
     
     @SerializedName("productImages")
     private List<ProductImage> productImages;
+
+    @SerializedName("productReviews") // tên này phải trùng với JSON trả về từ API
+    private List<ProductReview> reviewList;
     
     // Legacy field for backward compatibility
     private String imageUrl;
@@ -170,5 +173,13 @@ public class Product {
     public void setReviewCount(int reviewCount) {
         this.reviewCount = reviewCount;
     }
+    public List<ProductReview> getReviewList() {
+        return reviewList;
+    }
+
+    public void setReviewList(List<ProductReview> reviewList) {
+        this.reviewList = reviewList;
+    }
+
 }
 

@@ -86,9 +86,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                app:selectionRequired="false"
-                app:singleSelection="true" />
+                android:textStyle="bold"/>
 
             <!-- BRAND -->
             <TextView
@@ -108,8 +106,7 @@
                 android:layout_marginBottom="8dp"
                 app:selectionRequired="false"
                 android:textSize="16sp"
-                android:textStyle="bold"
-                app:singleSelection="true" />
+                android:textStyle="bold" />
 
             <!-- PRICE RANGE -->
             <TextView
@@ -174,12 +171,14 @@
                 android:id="@+id/chipGroupRating"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:singleSelection="true">
+                app:singleSelection="true"
+                app:selectionRequired="false">
 
                 <com.google.android.material.chip.Chip
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="5★"
+                    android:checkable="true"
                     app:chipBackgroundColor="@android:color/holo_orange_light"/>
 
 
@@ -187,24 +186,28 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="4★"
+                    android:checkable="true"
                     app:chipBackgroundColor="@android:color/holo_orange_light"/>
 
                 <com.google.android.material.chip.Chip
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="3★"
+                    android:checkable="true"
                     app:chipBackgroundColor="@android:color/holo_orange_light"/>
 
                 <com.google.android.material.chip.Chip
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="2★"
+                    android:checkable="true"
                     app:chipBackgroundColor="@android:color/holo_orange_light"/>
 
                 <com.google.android.material.chip.Chip
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="1★"
+                    android:checkable="true"
                     app:chipBackgroundColor="@android:color/holo_orange_light"/>
             </com.google.android.material.chip.ChipGroup>
 
@@ -232,7 +235,8 @@
                     android:textSize="18dp"
                     android:buttonTint="#FF6B57"
                     android:textColor="@color/black"
-                    android:text="Giá" />
+                    android:text="Giá"
+                    android:tag="price" />
 
                 <RadioButton
                     android:id="@+id/rbSortPopularity"
@@ -241,7 +245,8 @@
                     android:textSize="18dp"
                     android:buttonTint="#FF6B57"
                     android:textColor="@color/black"
-                    android:text="Phổ biến" />
+                    android:text="Phổ biến"
+                    android:tag="popularity" />
 
                 <RadioButton
                     android:id="@+id/rbSortCategory"
@@ -250,7 +255,9 @@
                     android:textSize="18dp"
                     android:buttonTint="#FF6B57"
                     android:textColor="@color/black"
-                    android:text="Danh mục" />
+                    android:text="Danh mục"
+                    android:tag="category" />
+
             </RadioGroup>
 
         </LinearLayout>
