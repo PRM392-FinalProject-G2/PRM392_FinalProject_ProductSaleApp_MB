@@ -81,13 +81,22 @@ public class CartAdapter extends RecyclerView.Adapter<CartAdapter.CartViewHolder
         }
 
         public void bind(CartItem cartItem) {
-            // Hiển thị ảnh sản phẩm
-            if (cartItem.getProduct() != null && cartItem.getProduct().getImageUrl() != null) {
-                Glide.with(context)
-                        .load(cartItem.getProduct().getImageUrl())
-                        .placeholder(R.drawable.ic_placeholder)
-                        .error(R.drawable.ic_placeholder)
-                        .into(ivProductImage);
+            // Hiển thị ảnh sản phẩm: ưu tiên ảnh đầu tiên trong productImages, fallback imageUrl
+            if (cartItem.getProduct() != null) {
+                String url = null;
+                if (cartItem.getProduct().getProductImages() != null && !cartItem.getProduct().getProductImages().isEmpty()) {
+                    url = cartItem.getProduct().getProductImages().get(0).getImageUrl();
+                }
+                if (url == null) {
+                    url = cartItem.getProduct().getImageUrl();
+                }
+                if (url != null) {
+                    Glide.with(context)
+                            .load(url)
+                            .placeholder(R.drawable.ic_placeholder)
+                            .error(R.drawable.ic_placeholder)
+                            .into(ivProductImage);
+                }
             }
 
             // Hiển thị tên sản phẩm
