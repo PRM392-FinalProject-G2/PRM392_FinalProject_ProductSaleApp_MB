@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    
+    <!-- Shopping bag outline -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M60,40 L140,40 C150,40 158,48 158,58 L158,150 C158,160 150,168 140,168 L60,168 C50,168 42,160 42,150 L42,58 C42,48 50,40 60,40 Z" />
+    
+    <!-- Bag handles -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M70,40 L70,30 C70,25 75,20 80,20 L120,20 C125,20 130,25 130,30 L130,40" />
+    
+    <!-- Bag content lines -->
+    <path
+        android:strokeColor="#BDBDBD"
+        android:strokeWidth="2"
+        android:pathData="M55,80 L145,80" />
+    <path
+        android:strokeColor="#BDBDBD"
+        android:strokeWidth="2"
+        android:pathData="M55,100 L145,100" />
+    <path
+        android:strokeColor="#BDBDBD"
+        android:strokeWidth="2"
+        android:pathData="M55,120 L145,120" />
+    
+    <!-- X mark -->
+    <path
+        android:strokeColor="#FF6B6B"
+        android:strokeWidth="3"
+        android:pathData="M85,85 L115,115 M115,85 L85,115" />
+        
+</vector>
