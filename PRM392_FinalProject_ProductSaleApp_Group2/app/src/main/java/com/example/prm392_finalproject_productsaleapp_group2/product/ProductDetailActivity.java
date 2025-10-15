@@ -394,7 +394,6 @@ public class ProductDetailActivity extends AppCompatActivity {
         String token = sessionManager.getAuthToken();
         int userId = sessionManager.getUserId();
 
-        // Luôn luôn gọi API lấy cart đang hoạt động
         cartService.getCartItems("Bearer " + token, userId, "Active")
                 .enqueue(new Callback<CartResponse>() {
                     @Override
@@ -403,8 +402,33 @@ public class ProductDetailActivity extends AppCompatActivity {
                             List<Cart> carts = response.body().getItems();
 
                             if (carts != null && !carts.isEmpty()) {
-                                int cartId = carts.get(0).getCartId(); // chỉ có 1 cart active
-                                addCartItem(token, cartId, productId, quantity);
+                                Cart cart = carts.get(0);
+                                int cartId = cart.getCartId();
+
+                                // ✅ Tìm xem sản phẩm đã có trong giỏ chưa
+                                CartItem existingItem = null;
+                                if (cart.getCartItems() != null) {
+                                    for (CartItem item : cart.getCartItems()) {
+                                        if (item.getProductId() == productId) {
+                                            existingItem = item;
+                                            break;
+                                        }
+                                    }
+                                }
+
+                                if (existingItem != null) {
+                                    // 🧮 Cập nhật lại quantity và price
+                                    int newQuantity = existingItem.getQuantity() + quantity;
+                                    int newPrice = (currentProduct != null ? currentProduct.getPrice() : 0) * newQuantity;
+                                    existingItem.setQuantity(newQuantity);
+                                    existingItem.setPrice(newPrice);
+
+                                    updateCartItem(token, existingItem);
+                                } else {
+                                    // ➕ Thêm mới
+                                    addCartItem(token, cartId, productId, quantity);
+                                }
+
                             } else {
                                 showToast("⚠ Không tìm thấy giỏ hàng đang hoạt động!");
                             }
@@ -416,6 +440,25 @@ public class ProductDetailActivity extends AppCompatActivity {
                     @Override
                     public void onFailure(Call<CartResponse> call, Throwable t) {
                         showToast("⚠ Lỗi khi lấy giỏ hàng: " + t.getMessage());
+                    }
+                });
+    }
+
+    private void updateCartItem(String token, CartItem existingItem) {
+        cartService.updateCartItem("Bearer " + token, existingItem.getCartItemId(), existingItem)
+                .enqueue(new Callback<CartItem>() {
+                    @Override
+                    public void onResponse(Call<CartItem> call, Response<CartItem> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            showToast("Đã cập nhật số lượng sản phẩm trong giỏ hàng!");
+                        } else {
+                            showToast("Cập nhật giỏ hàng thất bại (Mã lỗi " + response.code() + ")");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<CartItem> call, Throwable t) {
+                        showToast("⚠ Lỗi kết nối khi cập nhật giỏ hàng: " + t.getMessage());
                     }
                 });
     }
@@ -435,17 +478,13 @@ public class ProductDetailActivity extends AppCompatActivity {
                     public void onResponse(Call<CartItem> call, Response<CartItem> response) {
                         if (response.isSuccessful() && response.body() != null) {
                             CartItem addedItem = response.body();
-                            String productName = addedItem.getProduct() != null
-                                    ? addedItem.getProduct().getProductName()
-                                    : "Sản phẩm";
                             int qty = addedItem.getQuantity();
-                            int total = addedItem.getPrice();
+                            double total = addedItem.getPrice();
 
-                            showToast("🛒 Đã thêm " + qty + " x " + productName +
-                                    " (Tổng: " + NumberFormat.getInstance(new Locale("vi", "VN"))
-                                    .format(total) + "₫) vào giỏ hàng!");
+                            showToast("Đã thêm " + qty + " sản phẩm " +
+                                    " vào giỏ hàng!");
                         } else {
-                            showToast("❌ Thêm vào giỏ hàng thất bại (Mã lỗi " + response.code() + ")");
+                            showToast("Thêm vào giỏ hàng thất bại (Mã lỗi " + response.code() + ")");
                         }
                     }
 
