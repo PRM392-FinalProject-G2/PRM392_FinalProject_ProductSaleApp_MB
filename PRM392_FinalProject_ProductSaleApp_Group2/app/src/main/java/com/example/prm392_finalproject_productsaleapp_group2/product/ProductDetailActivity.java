@@ -6,6 +6,7 @@ import android.os.Handler;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.StyleSpan;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -23,14 +24,19 @@ import androidx.viewpager2.widget.ViewPager2;
 import com.example.prm392_finalproject_productsaleapp_group2.R;
 import com.example.prm392_finalproject_productsaleapp_group2.auth.SessionManager;
 import com.example.prm392_finalproject_productsaleapp_group2.models.ApiResponse;
+import com.example.prm392_finalproject_productsaleapp_group2.models.Cart;
+import com.example.prm392_finalproject_productsaleapp_group2.models.CartItem;
+import com.example.prm392_finalproject_productsaleapp_group2.models.CartResponse;
 import com.example.prm392_finalproject_productsaleapp_group2.models.FilterResponse;
 import com.example.prm392_finalproject_productsaleapp_group2.models.Product;
 import com.example.prm392_finalproject_productsaleapp_group2.models.ProductImage;
 import com.example.prm392_finalproject_productsaleapp_group2.models.ProductReview;
 import com.example.prm392_finalproject_productsaleapp_group2.models.Wishlist;
 import com.example.prm392_finalproject_productsaleapp_group2.models.WishlistMobile;
+import com.example.prm392_finalproject_productsaleapp_group2.net.CartApiClient;
 import com.example.prm392_finalproject_productsaleapp_group2.net.ProductApiClient;
 import com.example.prm392_finalproject_productsaleapp_group2.net.WishlistApiClient;
+import com.example.prm392_finalproject_productsaleapp_group2.services.CartApiService;
 import com.example.prm392_finalproject_productsaleapp_group2.services.ProductApiService;
 import com.example.prm392_finalproject_productsaleapp_group2.services.WishlistApiService;
 import com.example.prm392_finalproject_productsaleapp_group2.utils.NavigationBarUtil;
@@ -51,12 +57,15 @@ public class ProductDetailActivity extends AppCompatActivity {
     //region 🧱 Fields
     private ImageView ivWishlist, btnBack;
     private TextView tvName, tvPrice, tvFullDesc, tvSpecs;
+    private EditText etQuantity;
+    private  Button btnAddToCart;
     private ViewPager2 viewPager;
     private TabLayout tabDots;
-
+    private Product currentProduct;
     private SessionManager sessionManager;
     private ProductApiService productService;
     private WishlistApiService wishlistService;
+    private CartApiService cartService;
     private RecyclerView rvReviews;
     private ProductReviewAdapter reviewAdapter;
     private List<ProductReview> reviewList = new ArrayList<>();
@@ -105,6 +114,7 @@ public class ProductDetailActivity extends AppCompatActivity {
         userId = sessionManager.getUserId();
         productService = ProductApiClient.getInstance().getApiService();
         wishlistService = WishlistApiClient.getInstance().getApiService();
+        cartService = CartApiClient.getInstance().getApiService();
 
         NavigationBarUtil.setupNavigationBar(this);
         NavigationBarUtil.setActiveNavigationButton(this, "home");
@@ -121,6 +131,8 @@ public class ProductDetailActivity extends AppCompatActivity {
         tvFullDesc = findViewById(R.id.tvProductDescriptionDetail);
         tvSpecs = findViewById(R.id.tvProductSpecsDetail);
         rvReviews = findViewById(R.id.rvReviews);
+        btnAddToCart = findViewById(R.id.btnAddToCart);
+        etQuantity = findViewById(R.id.etQuantity);
 
         // setup adapter
         reviewAdapter = new ProductReviewAdapter(this, reviewList);
@@ -137,7 +149,6 @@ public class ProductDetailActivity extends AppCompatActivity {
 
         TextView btnDecrease = findViewById(R.id.btnDecrease);
         TextView btnIncrease = findViewById(R.id.btnIncrease);
-        EditText etQuantity = findViewById(R.id.etQuantity);
 
         btnIncrease.setOnClickListener(v -> {
             int qty = parseQuantity(etQuantity.getText().toString());
@@ -147,6 +158,16 @@ public class ProductDetailActivity extends AppCompatActivity {
         btnDecrease.setOnClickListener(v -> {
             int qty = parseQuantity(etQuantity.getText().toString());
             if (qty > 1) etQuantity.setText(String.valueOf(qty - 1));
+        });
+
+        btnAddToCart.setOnClickListener(v -> {
+            if (userId <= 0 || productId <= 0) {
+                showToast("Vui lòng đăng nhập để mua hàng");
+                return;
+            }
+
+            int quantity = parseQuantity(etQuantity.getText().toString());
+            addToCart(productId, quantity);
         });
 
         ivWishlist.setOnClickListener(v -> handleWishlistClick());
@@ -185,7 +206,7 @@ public class ProductDetailActivity extends AppCompatActivity {
 
     private void bindProductDetails(Product product) {
         tvName.setText(product.getProductName());
-
+        currentProduct = product;
         // 💰 Format giá VNĐ
         String priceStr = NumberFormat.getInstance(new Locale("vi", "VN"))
                 .format(product.getPrice()) + " ₫";
@@ -368,4 +389,71 @@ public class ProductDetailActivity extends AppCompatActivity {
         Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
     //endregion
+    // Add to Cart
+    private void addToCart(int productId, int quantity) {
+        String token = sessionManager.getAuthToken();
+        int userId = sessionManager.getUserId();
+
+        // Luôn luôn gọi API lấy cart đang hoạt động
+        cartService.getCartItems("Bearer " + token, userId, "Active")
+                .enqueue(new Callback<CartResponse>() {
+                    @Override
+                    public void onResponse(Call<CartResponse> call, Response<CartResponse> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            List<Cart> carts = response.body().getItems();
+
+                            if (carts != null && !carts.isEmpty()) {
+                                int cartId = carts.get(0).getCartId(); // chỉ có 1 cart active
+                                addCartItem(token, cartId, productId, quantity);
+                            } else {
+                                showToast("⚠ Không tìm thấy giỏ hàng đang hoạt động!");
+                            }
+                        } else {
+                            showToast("⚠ Không thể lấy giỏ hàng hiện tại (" + response.code() + ")");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<CartResponse> call, Throwable t) {
+                        showToast("⚠ Lỗi khi lấy giỏ hàng: " + t.getMessage());
+                    }
+                });
+    }
+
+    private void addCartItem(String token, int cartId, int productId, int quantity) {
+        int price = currentProduct != null ? currentProduct.getPrice() : 0;
+
+        CartItem cartItem = new CartItem();
+        cartItem.setCartId(cartId);
+        cartItem.setProductId(productId);
+        cartItem.setQuantity(quantity);
+        cartItem.setPrice(price * quantity);
+
+        cartService.addCartItem("Bearer " + token, cartItem)
+                .enqueue(new Callback<CartItem>() {
+                    @Override
+                    public void onResponse(Call<CartItem> call, Response<CartItem> response) {
+                        if (response.isSuccessful() && response.body() != null) {
+                            CartItem addedItem = response.body();
+                            String productName = addedItem.getProduct() != null
+                                    ? addedItem.getProduct().getProductName()
+                                    : "Sản phẩm";
+                            int qty = addedItem.getQuantity();
+                            int total = addedItem.getPrice();
+
+                            showToast("🛒 Đã thêm " + qty + " x " + productName +
+                                    " (Tổng: " + NumberFormat.getInstance(new Locale("vi", "VN"))
+                                    .format(total) + "₫) vào giỏ hàng!");
+                        } else {
+                            showToast("❌ Thêm vào giỏ hàng thất bại (Mã lỗi " + response.code() + ")");
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<CartItem> call, Throwable t) {
+                        showToast("⚠ Lỗi kết nối khi thêm sản phẩm: " + t.getMessage());
+                    }
+                });
+    }
+
 }
