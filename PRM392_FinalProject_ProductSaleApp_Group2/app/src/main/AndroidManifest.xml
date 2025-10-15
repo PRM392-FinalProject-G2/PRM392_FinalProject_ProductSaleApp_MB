@@ -21,6 +21,9 @@
         android:theme="@style/Theme.PRM392_FinalProject_ProductSaleApp_Group2"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".order.OrderDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".auth.ChangePassword_4_Activity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
@@ -116,23 +119,17 @@
         <activity
             android:name=".auth.EditProfileActivity"
             android:exported="false"
-            android:windowSoftInputMode="adjustResize" />
-
-        <!-- Firebase Cloud Messaging Service -->
+            android:windowSoftInputMode="adjustResize" /> <!-- Firebase Cloud Messaging Service -->
         <service
             android:name=".services.MyFirebaseMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
-        </service>
-
-        <!-- Firebase default notification channel (optional) -->
+        </service> <!-- Firebase default notification channel (optional) -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="default_channel" />
-
-        <!-- Firebase auto-init (optional, set to false if you want manual initialization) -->
+            android:value="default_channel" /> <!-- Firebase auto-init (optional, set to false if you want manual initialization) -->
         <meta-data
             android:name="firebase_messaging_auto_init_enabled"
             android:value="true" />
