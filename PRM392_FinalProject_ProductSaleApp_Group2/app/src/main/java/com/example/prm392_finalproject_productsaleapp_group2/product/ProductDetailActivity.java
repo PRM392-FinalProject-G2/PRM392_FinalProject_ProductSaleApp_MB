@@ -439,7 +439,7 @@ public class ProductDetailActivity extends AppCompatActivity {
                                     ? addedItem.getProduct().getProductName()
                                     : "Sản phẩm";
                             int qty = addedItem.getQuantity();
-                            int total = addedItem.getPrice();
+                            double total = addedItem.getPrice();
 
                             showToast("🛒 Đã thêm " + qty + " x " + productName +
                                     " (Tổng: " + NumberFormat.getInstance(new Locale("vi", "VN"))
