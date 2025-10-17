@@ -113,8 +113,14 @@ public class ListOrderActivity extends AppCompatActivity {
         rvOrders.setLayoutManager(new LinearLayoutManager(this));
         rvOrders.setAdapter(orderAdapter);
         
-        // Set default tab
-        updateTabSelection(tabPending);
+        // Set default tab - check if specific tab was requested
+        String requestedTab = getIntent().getStringExtra("selectedTab");
+        if ("Delivering".equals(requestedTab)) {
+            currentStatus = "Delivering";
+            updateTabSelection(tabDelivering);
+        } else {
+            updateTabSelection(tabPending);
+        }
     }
     
     private void setupListeners() {

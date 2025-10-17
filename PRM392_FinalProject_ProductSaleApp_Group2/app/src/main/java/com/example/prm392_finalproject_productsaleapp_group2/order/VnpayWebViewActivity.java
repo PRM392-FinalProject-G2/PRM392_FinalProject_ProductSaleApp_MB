@@ -65,6 +65,9 @@ public class VnpayWebViewActivity extends AppCompatActivity {
         Intent intent = new Intent(this, isSuccess ? CheckoutSuccessActivity.class : CheckoutFailActivity.class);
         intent.putExtra("vnp_return_url", url);
         intent.putExtra("vnp_response_code", responseCode);
+        // Forward orderId if available from previous step
+        int orderId = getIntent().getIntExtra("orderId", -1);
+        if (orderId != -1) intent.putExtra("orderId", orderId);
         startActivity(intent);
         finish();
     }
@@ -96,6 +99,9 @@ public class VnpayWebViewActivity extends AppCompatActivity {
 }
 
  
+
+
+
 
 
 
