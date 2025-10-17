@@ -57,6 +57,9 @@ dependencies {
     // ShortcutBadger for app icon badge
     implementation("me.leolin:ShortcutBadger:1.1.22@aar")
     
+    // SignalR Java client
+    implementation("com.microsoft.signalr:signalr:7.0.10")
+    
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
