@@ -7,19 +7,79 @@
     android:layout_height="match_parent"
     tools:context=".chat.ChatActivity">
 
-    <!-- Main content area -->
-    <FrameLayout
-        android:id="@+id/content_frame"
+    <!-- Chat header -->
+    <LinearLayout
+        android:id="@+id/chat_header"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/img_avatar"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:src="@drawable/ic_person_circle"
+            android:contentDescription="avatar"
+            android:scaleType="centerCrop" />
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:text="Chat"
+            android:textColor="@android:color/black"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <!-- Messages list -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_messages"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="parent"
+        android:padding="12dp"
+        app:layout_constraintTop_toBottomOf="@id/chat_header"
+        app:layout_constraintBottom_toTopOf="@+id/message_input_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_chat_message_sent" />
+
+    <!-- Input bar -->
+    <LinearLayout
+        android:id="@+id/message_input_bar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="8dp"
         app:layout_constraintBottom_toTopOf="@+id/bottom_navigation"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
-        
-        <!-- Add your main content here -->
-        
-    </FrameLayout>
+
+        <EditText
+            android:id="@+id/et_message"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_input_round"
+            android:hint="Hãy nhập tin nhắn ở đây..."
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
+        <ImageButton
+            android:id="@+id/btn_send"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_circle_primary"
+            android:contentDescription="send"
+            android:src="@drawable/ic_send" />
+    </LinearLayout>
 
     <!-- Bottom Navigation Bar -->
     <include
