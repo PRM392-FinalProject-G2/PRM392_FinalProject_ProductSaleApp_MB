@@ -15,6 +15,7 @@ import com.example.prm392_finalproject_productsaleapp_group2.R;
 import com.example.prm392_finalproject_productsaleapp_group2.auth.ProfileActivity;
 import com.example.prm392_finalproject_productsaleapp_group2.cart.CartActivity;
 import com.example.prm392_finalproject_productsaleapp_group2.chat.ChatActivity;
+import com.example.prm392_finalproject_productsaleapp_group2.chat.ConversationsActivity;
 import com.example.prm392_finalproject_productsaleapp_group2.map.MapActivity;
 import com.example.prm392_finalproject_productsaleapp_group2.product.HomeActivity;
 
@@ -39,8 +40,8 @@ public class NavigationBarUtil {
         View chatBtn = activity.findViewById(R.id.btn_chat);
         if (chatBtn != null) {
             chatBtn.setOnClickListener(v -> {
-                if (!(activity instanceof ChatActivity)) {
-                    Intent intent = new Intent(activity, ChatActivity.class);
+                if (!(activity instanceof ConversationsActivity)) {
+                    Intent intent = new Intent(activity, ConversationsActivity.class);
                     // Remove activity transition animation
                     intent.addFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
                     activity.startActivity(intent);
