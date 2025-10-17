@@ -45,16 +45,21 @@
                     app:tint="#404040" />
 
                 <!-- 📝 Text gợi ý -->
-                <TextView
-                    android:id="@+id/tvSearchHint"
+                <EditText
+                    android:id="@+id/etSearch"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
                     android:layout_weight="1"
-                    android:text="Tìm kiếm từ khóa"
+                    android:layout_marginStart="8dp"
+                    android:textScaleX="1"
+                    android:hint="Tìm kiếm từ khóa"
                     android:textColor="#525151"
-                    android:textScaleX="1.05"
-                    android:textSize="18sp" />
+                    android:textSize="18sp"
+                    android:background="@android:color/transparent"
+                    android:imeOptions="actionSearch"
+                    android:inputType="text"
+                    android:singleLine="true"/>
+
 
                 <!-- ⚙️ Icon filter ở bên phải -->
                 <ImageView

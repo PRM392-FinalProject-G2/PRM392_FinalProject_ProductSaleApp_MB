@@ -12,18 +12,16 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.example.prm392_finalproject_productsaleapp_group2.R;
-
-import org.json.JSONException;
-import org.json.JSONObject;
+import com.example.prm392_finalproject_productsaleapp_group2.models.ProductReview;
 
 import java.util.List;
 
 public class ProductReviewAdapter extends RecyclerView.Adapter<ProductReviewAdapter.ReviewViewHolder> {
 
     private final Context context;
-    private final List<JSONObject> reviewList;
+    private final List<ProductReview> reviewList;
 
-    public ProductReviewAdapter(Context context, List<JSONObject> reviewList) {
+    public ProductReviewAdapter(Context context, List<ProductReview> reviewList) {
         this.context = context;
         this.reviewList = reviewList;
     }
@@ -37,26 +35,24 @@ public class ProductReviewAdapter extends RecyclerView.Adapter<ProductReviewAdap
 
     @Override
     public void onBindViewHolder(@NonNull ReviewViewHolder holder, int position) {
-        JSONObject review = reviewList.get(position);
-        try {
-            holder.tvUsername.setText(review.getString("username"));
-            holder.tvComment.setText(review.getString("comment"));
+        ProductReview review = reviewList.get(position);
 
-            int rating = review.getInt("rating");
-            holder.tvRating.setText(new String(new char[rating]).replace("\0", "★"));
+        holder.tvUsername.setText(review.getUsername());
+        holder.tvComment.setText(review.getComment());
 
-            String createdAt = review.getString("createdAt").substring(0, 10);
-            holder.tvCreatedAt.setText(createdAt);
+        int rating = review.getRating();
+        holder.tvRating.setText(new String(new char[rating]).replace("\0", "★"));
 
-            Glide.with(context)
-                    .load(review.getString("userAvatarUrl"))
-                    .circleCrop()
-                    .placeholder(R.drawable.ic_placeholder)
-                    .into(holder.imgUserAvatar);
+        String createdAt = review.getCreatedAt() != null && review.getCreatedAt().length() >= 10
+                ? review.getCreatedAt().substring(0, 10)
+                : "";
+        holder.tvCreatedAt.setText(createdAt);
 
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+        Glide.with(context)
+                .load(review.getUserAvatarUrl())
+                .circleCrop()
+                .placeholder(R.drawable.ic_placeholder)
+                .into(holder.imgUserAvatar);
     }
 
     @Override
@@ -78,4 +74,3 @@ public class ProductReviewAdapter extends RecyclerView.Adapter<ProductReviewAdap
         }
     }
 }
-

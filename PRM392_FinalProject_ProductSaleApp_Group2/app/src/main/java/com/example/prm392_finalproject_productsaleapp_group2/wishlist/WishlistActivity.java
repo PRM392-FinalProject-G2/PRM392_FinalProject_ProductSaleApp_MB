@@ -16,7 +16,7 @@ import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.cardview.widget.CardView;
+import androidx.appcompat.widget.AppCompatButton;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -49,7 +49,7 @@ public class WishlistActivity extends AppCompatActivity implements WishlistMobil
     private RecyclerView rvWishlist;
     private ProgressBar progressBar;
     private LinearLayout layoutEmpty;
-    private CardView btnGoShopping, btnClearAll;
+    private AppCompatButton btnGoShopping, btnClearAll;
     private EditText edtSearch;
     private List<WishlistMobile> allWishlistItems; // For search functionality
     private ImageView ivBack;
@@ -72,7 +72,19 @@ public class WishlistActivity extends AppCompatActivity implements WishlistMobil
         
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, 0);
+            // Apply only side paddings to the root, let header extend under status bar
+            v.setPadding(systemBars.left, 0, systemBars.right, 0);
+
+            // Add top inset to the header so its gradient extends under the status bar
+            View header = findViewById(R.id.header_layout);
+            if (header != null) {
+                header.setPadding(
+                        header.getPaddingLeft(),
+                        header.getPaddingTop() + systemBars.top,
+                        header.getPaddingRight(),
+                        header.getPaddingBottom()
+                );
+            }
             return WindowInsetsCompat.CONSUMED;
         });
 

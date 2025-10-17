@@ -1,9 +1,10 @@
 package com.example.prm392_finalproject_productsaleapp_group2.product;
 
+import android.content.Intent;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
-import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -18,19 +19,26 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.example.prm392_finalproject_productsaleapp_group2.R;
+import com.example.prm392_finalproject_productsaleapp_group2.auth.SessionManager;
+import com.example.prm392_finalproject_productsaleapp_group2.models.Brand;
+import com.example.prm392_finalproject_productsaleapp_group2.models.Category;
+import com.example.prm392_finalproject_productsaleapp_group2.models.FilterResponse;
+import com.example.prm392_finalproject_productsaleapp_group2.models.ProductFilterBM;
 import com.example.prm392_finalproject_productsaleapp_group2.net.ApiConfig;
+import com.example.prm392_finalproject_productsaleapp_group2.net.BrandApiClient;
+import com.example.prm392_finalproject_productsaleapp_group2.net.CategoryApiClient;
+import com.example.prm392_finalproject_productsaleapp_group2.net.ProductApiClient;
+import com.example.prm392_finalproject_productsaleapp_group2.services.BrandApiService;
+import com.example.prm392_finalproject_productsaleapp_group2.services.CategoryApiService;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class FilterActivity extends AppCompatActivity {
 
@@ -40,34 +48,47 @@ public class FilterActivity extends AppCompatActivity {
     private EditText etMinPrice, etMaxPrice;
     private ImageView btnClose;
 
-    private List<JSONObject> categoryList = new ArrayList<>();
-    private List<JSONObject> brandList = new ArrayList<>();
+    private List<Category> categoryList = new ArrayList<>();
+    private List<Brand> brandList = new ArrayList<>();
 
-    private int selectedCategoryId = -1;
-    private int selectedBrandId = -1;
-    private int selectedRating = -1;
+    // Multi-select lists
+    private List<Integer> selectedCategoryIds = new ArrayList<>();
+    private List<Integer> selectedBrandIds = new ArrayList<>();
+    private List<Integer> selectedRatings = new ArrayList<>();
+
+    // Single value sort
     private String selectedSort = "";
+    private ProductFilterBM incomingFilter;
+
     private int minPrice = -1;
     private int maxPrice = -1;
+
+    private CategoryApiService categoryService;
+    private BrandApiService brandService;
+    private SessionManager sessionManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
-        
-        // Set status bar transparent to let gradient show through
-        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
-        
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
         setContentView(R.layout.activity_filter_product);
-        
-        // Handle window insets for edge-to-edge display
+
+        setupWindowInsets();
+        initViews();
+        initServices();
+
+        loadCategories();
+        loadBrands();
+
+        setupListeners();
+
+    }
+    private void setupWindowInsets() {
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            
-            // Apply only sides to root, let header extend under status bar
             v.setPadding(systemBars.left, 0, systemBars.right, 0);
 
-            // Add top inset to header so its background extends under status bar
             android.view.View header = findViewById(R.id.header_layout);
             if (header != null) {
                 header.setPadding(
@@ -77,11 +98,10 @@ public class FilterActivity extends AppCompatActivity {
                         header.getPaddingBottom()
                 );
             }
-
             return WindowInsetsCompat.CONSUMED;
         });
-
-        // 🔹 Ánh xạ view
+    }
+    private void initViews() {
         chipGroupCategory = findViewById(R.id.chipGroupCategory);
         chipGroupBrand = findViewById(R.id.chipGroupBrand);
         chipGroupRating = findViewById(R.id.chipGroupRating);
@@ -91,29 +111,40 @@ public class FilterActivity extends AppCompatActivity {
         btnApply = findViewById(R.id.btnApply);
         btnReset = findViewById(R.id.btnReset);
         btnClose = findViewById(R.id.btnClose);
+        incomingFilter = (ProductFilterBM) getIntent().getSerializableExtra("productFilter");
 
-        // 🔹 Gọi API lấy category & brand
-        loadCategories();
-        loadBrands();
+    }
 
-        // 🔹 Đóng màn filter
+    private void initServices() {
+        sessionManager = new SessionManager(this);
+        categoryService = CategoryApiClient.getInstance().getApiService();
+        brandService = BrandApiClient.getInstance().getApiService();
+    }
+
+    private void setupListeners() {
         btnClose.setOnClickListener(v -> finish());
+        chipGroupRating.setSingleSelection(true);
 
-        // 🔹 Rating
         chipGroupRating.setOnCheckedStateChangeListener((group, checkedIds) -> {
             if (!checkedIds.isEmpty()) {
                 Chip chip = findViewById(checkedIds.get(0));
-                selectedRating = Integer.parseInt(chip.getText().toString().replace("★", "").trim());
-            } else selectedRating = -1;
+                selectedRatings.clear();
+                selectedRatings.add(Integer.parseInt(chip.getText().toString().replace("★","").trim()));
+            } else {
+                selectedRatings.clear();
+            }
         });
 
-        // 🔹 Sort
+
+        // SortBy single-select
         radioSortGroup.setOnCheckedChangeListener((group, checkedId) -> {
             RadioButton rb = findViewById(checkedId);
-            if (rb != null) selectedSort = rb.getText().toString();
+            if (rb != null && rb.getTag() != null) {
+                selectedSort = rb.getTag().toString(); // "price", "popularity", "category"
+            }
         });
 
-        // 🔹 Nút Đặt lại
+
         btnReset.setOnClickListener(v -> {
             chipGroupCategory.clearCheck();
             chipGroupBrand.clearCheck();
@@ -121,162 +152,116 @@ public class FilterActivity extends AppCompatActivity {
             radioSortGroup.clearCheck();
             etMinPrice.setText("");
             etMaxPrice.setText("");
-            selectedCategoryId = -1;
-            selectedBrandId = -1;
-            selectedRating = -1;
+            selectedCategoryIds.clear();
+            selectedBrandIds.clear();
+            selectedRatings.clear();
             selectedSort = "";
             minPrice = maxPrice = -1;
         });
 
-        // 🔹 Nút Áp dụng
-        btnApply.setOnClickListener(v -> {
-            try {
-                String minStr = etMinPrice.getText().toString().trim();
-                String maxStr = etMaxPrice.getText().toString().trim();
-                minPrice = minStr.isEmpty() ? -1 : Integer.parseInt(minStr);
-                maxPrice = maxStr.isEmpty() ? -1 : Integer.parseInt(maxStr);
-            } catch (Exception e) {
-                Toast.makeText(this, "Giá không hợp lệ", Toast.LENGTH_SHORT).show();
-                return;
+        btnApply.setOnClickListener(v -> applyFilter());
+    }
+
+    private void loadCategories() {
+        String token = sessionManager.getAuthToken();
+        if (token == null || token.isEmpty()) return;
+
+        Call<FilterResponse<Category>> call = categoryService.getCategories("Bearer " + token);
+        call.enqueue(new Callback<FilterResponse<Category>>() {
+            @Override
+            public void onResponse(Call<FilterResponse<Category>> call, Response<FilterResponse<Category>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    categoryList = response.body().getItems();
+                    populateCategoryChips();
+                }
             }
-
-            String result = String.format(
-                    "Category: %d | Brand: %d | Rating: %d★ | Sort: %s | Price: %d–%d",
-                    selectedCategoryId, selectedBrandId, selectedRating,
-                    selectedSort, minPrice, maxPrice
-            );
-            Toast.makeText(this, "Bộ lọc: " + result, Toast.LENGTH_LONG).show();
-
-            // TODO: Truyền dữ liệu filter qua Intent hoặc gọi API lọc sản phẩm ở đây
+            @Override
+            public void onFailure(Call<FilterResponse<Category>> call, Throwable t) { }
         });
     }
 
-    // ====================== GỌI API CATEGORY ======================
-    private void loadCategories() {
-        new AsyncTask<Void, Void, Boolean>() {
-            @Override
-            protected Boolean doInBackground(Void... voids) {
-                try {
-                    URL url = new URL(ApiConfig.endpoint("/api/Categories/filter?PageSize=100"));
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setRequestProperty("Accept", "application/json");
-
-                    int code = conn.getResponseCode();
-                    if (code >= 200 && code < 300) {
-                        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        StringBuilder sb = new StringBuilder();
-                        String line;
-                        while ((line = br.readLine()) != null) sb.append(line);
-                        br.close();
-
-                        JSONObject root = new JSONObject(sb.toString());
-                        JSONArray items = root.getJSONArray("items");
-
-                        categoryList.clear();
-                        for (int i = 0; i < items.length(); i++) {
-                            categoryList.add(items.getJSONObject(i));
-                        }
-                        return true;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                return false;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean success) {
-                if (success) populateCategoryChips();
-                else Toast.makeText(FilterActivity.this, "Không tải được danh mục", Toast.LENGTH_SHORT).show();
-            }
-        }.execute();
-    }
-
-    // ====================== GỌI API BRAND ======================
     private void loadBrands() {
-        new AsyncTask<Void, Void, Boolean>() {
+        String token = sessionManager.getAuthToken();
+        if (token == null || token.isEmpty()) return;
+
+        Call<FilterResponse<Brand>> call = brandService.getBrands(token,1,50);
+        call.enqueue(new Callback<FilterResponse<Brand>>() {
             @Override
-            protected Boolean doInBackground(Void... voids) {
-                try {
-                    URL url = new URL(ApiConfig.endpoint("/api/Brands/filter?PageSize=100"));
-                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-                    conn.setRequestMethod("GET");
-                    conn.setRequestProperty("Accept", "application/json");
-
-                    int code = conn.getResponseCode();
-                    if (code >= 200 && code < 300) {
-                        BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-                        StringBuilder sb = new StringBuilder();
-                        String line;
-                        while ((line = br.readLine()) != null) sb.append(line);
-                        br.close();
-
-                        JSONObject root = new JSONObject(sb.toString());
-                        JSONArray items = root.getJSONArray("items");
-
-                        brandList.clear();
-                        for (int i = 0; i < items.length(); i++) {
-                            brandList.add(items.getJSONObject(i));
-                        }
-                        return true;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+            public void onResponse(Call<FilterResponse<Brand>> call, Response<FilterResponse<Brand>> response) {
+                if (response.isSuccessful() && response.body() != null) {
+                    brandList = response.body().getItems();
+                    populateBrandChips();
                 }
-                return false;
             }
-
             @Override
-            protected void onPostExecute(Boolean success) {
-                if (success) populateBrandChips();
-                else Toast.makeText(FilterActivity.this, "Không tải được thương hiệu", Toast.LENGTH_SHORT).show();
-            }
-        }.execute();
+            public void onFailure(Call<FilterResponse<Brand>> call, Throwable t) { }
+        });
     }
 
-    // ====================== TẠO CHIP ======================
     private void populateCategoryChips() {
         chipGroupCategory.removeAllViews();
-        for (JSONObject cat : categoryList) {
-            try {
-                Chip chip = new Chip(this);
-                chip.setText(cat.getString("categoryName"));
-                chip.setTag(cat.getInt("categoryId"));
-                chip.setCheckable(true);
-                chip.setChipBackgroundColor(ColorStateList.valueOf(Color.parseColor("#FF6B57")));
-                chip.setTextColor(getResources().getColor(R.color.black));
-                chipGroupCategory.addView(chip);
-            } catch (Exception ignored) {}
+        for (Category cat : categoryList) {
+            Chip chip = new Chip(this);
+            chip.setText(cat.getCategoryName());
+            chip.setTag(cat.getCategoryId());
+            chip.setCheckable(true);
+            chip.setChipBackgroundColor(ColorStateList.valueOf(Color.parseColor("#FF6B57")));
+            chip.setTextColor(getResources().getColor(R.color.black));
+            chipGroupCategory.addView(chip);
         }
-
         chipGroupCategory.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            if (!checkedIds.isEmpty()) {
-                Chip chip = findViewById(checkedIds.get(0));
-                selectedCategoryId = (int) chip.getTag();
-            } else selectedCategoryId = -1;
+            selectedCategoryIds.clear();
+            for (int id : checkedIds) {
+                Chip chip = findViewById(id);
+                selectedCategoryIds.add((Integer) chip.getTag());
+            }
         });
     }
+
 
     private void populateBrandChips() {
         chipGroupBrand.removeAllViews();
-        for (JSONObject brand : brandList) {
-            try {
-                Chip chip = new Chip(this);
-                chip.setText(brand.getString("brandName"));
-                chip.setTag(brand.getInt("brandId"));
-                chip.setCheckable(true);
-                chip.setChipBackgroundColor(ColorStateList.valueOf(Color.parseColor("#FF6B57")));
-                chip.setTextColor(getResources().getColor(R.color.black));
-                chipGroupBrand.addView(chip);
-            } catch (Exception ignored) {}
+        for (Brand brand : brandList) {
+            Chip chip = new Chip(this);
+            chip.setText(brand.getBrandName());
+            chip.setTag(brand.getBrandId());
+            chip.setChipBackgroundColor(ColorStateList.valueOf(Color.parseColor("#FF6B57")));
+            chip.setTextColor(getResources().getColor(R.color.black));
+            chip.setCheckable(true);
+            chipGroupBrand.addView(chip);
         }
-
         chipGroupBrand.setOnCheckedStateChangeListener((group, checkedIds) -> {
-            if (!checkedIds.isEmpty()) {
-                Chip chip = findViewById(checkedIds.get(0));
-                selectedBrandId = (int) chip.getTag();
-            } else selectedBrandId = -1;
+            selectedBrandIds.clear();
+            for (int id : checkedIds) {
+                Chip chip = findViewById(id);
+                selectedBrandIds.add((Integer) chip.getTag());
+            }
         });
     }
+
+    private void applyFilter() {
+        try {
+            String minStr = etMinPrice.getText().toString().trim();
+            String maxStr = etMaxPrice.getText().toString().trim();
+            minPrice = minStr.isEmpty() ? -1 : Integer.parseInt(minStr);
+            maxPrice = maxStr.isEmpty() ? -1 : Integer.parseInt(maxStr);
+        } catch (Exception e) {
+            Toast.makeText(this, "Giá không hợp lệ", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        ProductFilterBM filter = new ProductFilterBM();
+        filter.Search = (incomingFilter != null) ? incomingFilter.Search : null;
+        filter.CategoryIds = selectedCategoryIds.isEmpty() ? null : new ArrayList<>(selectedCategoryIds);
+        filter.BrandIds = selectedBrandIds.isEmpty() ? null : new ArrayList<>(selectedBrandIds);
+        filter.AverageRating = selectedRatings.isEmpty() ? null : (double) selectedRatings.get(0); // lấy rating đầu tiên nếu muốn
+        filter.MinPrice = minPrice != -1 ? (double) minPrice : null;
+        filter.MaxPrice = maxPrice != -1 ? (double) maxPrice : null;
+        filter.SortBy = selectedSort.isEmpty() ? null : selectedSort;
+
+        Intent intent = new Intent(FilterActivity.this, ListProductActivity.class);
+        intent.putExtra("productFilter", filter);
+        startActivity(intent);
+    }
 }
+
