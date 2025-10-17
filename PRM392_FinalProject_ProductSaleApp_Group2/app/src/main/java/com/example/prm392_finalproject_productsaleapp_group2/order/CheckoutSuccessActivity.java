@@ -31,7 +31,13 @@ public class CheckoutSuccessActivity extends AppCompatActivity {
         Button cont = findViewById(R.id.btn_continue_shopping);
         if (track != null) {
             track.setOnClickListener(v -> {
-                // TODO: navigate to order list
+                // Always go to order list with "Pending" (Chờ giao hàng) tab pre-selected
+                android.content.Intent intent = new android.content.Intent(
+                        CheckoutSuccessActivity.this,
+                        com.example.prm392_finalproject_productsaleapp_group2.order.ListOrderActivity.class
+                );
+                intent.putExtra("selectedTab", "Pending");
+                startActivity(intent);
                 finish();
             });
         }

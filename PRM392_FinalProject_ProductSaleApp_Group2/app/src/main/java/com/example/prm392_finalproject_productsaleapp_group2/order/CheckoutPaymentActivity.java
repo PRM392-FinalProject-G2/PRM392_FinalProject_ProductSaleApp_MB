@@ -87,21 +87,79 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
         preloadUserContact();
     }
 
-    private void onPayButtonClick() {
-        Button btn = findViewById(R.id.btn_pay);
-        if (lastPaymentUrl != null && !lastPaymentUrl.isEmpty()) {
-            // Second click: go to VNPay
-            android.content.Intent intent = new android.content.Intent(CheckoutPaymentActivity.this, VnpayWebViewActivity.class);
-            intent.putExtra("paymentUrl", lastPaymentUrl);
-            startActivity(intent);
-        } else {
-            // First click: create order then switch label
-            // Chặn voucher về sau
+    private void showSelectVnpayModal() {
+        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
+        builder.setTitle("Chọn ví thanh toán");
+        // Single option for now: VNPay
+        final String[] methods = new String[]{"VNPay"};
+        builder.setSingleChoiceItems(methods, 0, null);
+        builder.setNegativeButton("Hủy", null);
+        builder.setPositiveButton("Tiếp tục", (d, w) -> {
+            // Mark confirmed and disable voucher picking
             hasConfirmed = true;
             if (btnChooseVoucher != null) btnChooseVoucher.setEnabled(false);
-            // Hiệu ứng loading giả 2s rồi mới gọi create-order (giữ nguyên logic cũ sau đó)
-            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(this::createOrderAndShowVnpay, 2000);
+            // Proceed to create payment
+            createVnpayPayment();
+        });
+        builder.show();
+    }
+
+    private void createVnpayPayment() {
+        String address = etBillingAddress.getText().toString().trim();
+        if (address.isEmpty()) {
+            Toast.makeText(this, "Vui lòng nhập địa chỉ", Toast.LENGTH_SHORT).show();
+            return;
         }
+        String token = "Bearer " + sessionManager.getAuthToken();
+
+        // Try to take current displayed final amount; fallback to calculate API if needed
+        long finalAmount = 0L;
+        try {
+            TextView tvFinal = findViewById(R.id.tv_final_amount);
+            String text = tvFinal.getText().toString().replace("₫", "").replace(" ", "").replace(",", "").replace("-", "");
+            if (!text.isEmpty()) finalAmount = Long.parseLong(text);
+        } catch (Exception ignored) {}
+
+        com.example.prm392_finalproject_productsaleapp_group2.services.PaymentApiService.CreatePaymentRequest req = new com.example.prm392_finalproject_productsaleapp_group2.services.PaymentApiService.CreatePaymentRequest();
+        req.cartId = cartId;
+        req.userId = userId;
+        req.voucherId = selectedVoucherId;
+        req.finalAmount = finalAmount;
+        req.paymentMethod = "Vnpay";
+        req.billingAddress = address;
+
+        com.example.prm392_finalproject_productsaleapp_group2.services.PaymentApiService api = com.example.prm392_finalproject_productsaleapp_group2.net.PaymentApiClient.getInstance().getApiService();
+        api.createVnpayPayment(token, req).enqueue(new retrofit2.Callback<com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse>() {
+            @Override
+            public void onResponse(retrofit2.Call<com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse> call, retrofit2.Response<com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse> response) {
+                if (response.isSuccessful() && response.body()!=null) {
+                    com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse data = response.body();
+                    // Expect paymentUrl in response to open VNPay
+                    lastPaymentUrl = data.getPaymentUrl();
+                    if (lastPaymentUrl != null && !lastPaymentUrl.isEmpty()) {
+                        android.content.Intent intent = new android.content.Intent(CheckoutPaymentActivity.this, VnpayWebViewActivity.class);
+                        intent.putExtra("paymentUrl", lastPaymentUrl);
+                        intent.putExtra("orderId", data.getOrderId());
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(CheckoutPaymentActivity.this, "Không nhận được liên kết VNPay", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    Toast.makeText(CheckoutPaymentActivity.this, "Khởi tạo thanh toán thất bại", Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse> call, Throwable t) {
+                Toast.makeText(CheckoutPaymentActivity.this, "Lỗi kết nối thanh toán", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void onPayButtonClick() {
+        Button btn = findViewById(R.id.btn_pay);
+        // Always show VNPay selection modal first (required)
+        showSelectVnpayModal();
     }
 
     private void loadCart() {
@@ -178,15 +236,15 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
     private void openVoucherDialog() {
         String token = "Bearer " + sessionManager.getAuthToken();
         VoucherApiService api = VoucherApiClient.getInstance().getApiService();
-        api.getUserVouchers(token, userId, false).enqueue(new retrofit2.Callback<FilterResponse<UserVoucher>>() {
+        api.getUserVouchers(token, userId).enqueue(new retrofit2.Callback<java.util.List<UserVoucher>>() {
             @Override
-            public void onResponse(retrofit2.Call<FilterResponse<UserVoucher>> call, retrofit2.Response<FilterResponse<UserVoucher>> response) {
-                java.util.List<UserVoucher> vouchers = (response.isSuccessful() && response.body()!=null) ? response.body().getItems() : java.util.Collections.emptyList();
+            public void onResponse(retrofit2.Call<java.util.List<UserVoucher>> call, retrofit2.Response<java.util.List<UserVoucher>> response) {
+                java.util.List<UserVoucher> vouchers = (response.isSuccessful() && response.body()!=null) ? response.body() : java.util.Collections.emptyList();
                 showVoucherDialog(vouchers);
             }
 
             @Override
-            public void onFailure(retrofit2.Call<FilterResponse<UserVoucher>> call, Throwable t) {
+            public void onFailure(retrofit2.Call<java.util.List<UserVoucher>> call, Throwable t) {
                 Toast.makeText(CheckoutPaymentActivity.this, "Lỗi tải voucher", Toast.LENGTH_SHORT).show();
             }
         });
@@ -199,24 +257,130 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
         }
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setTitle("Chọn voucher");
-        String[] items = new String[vouchers.size()];
-        for (int i = 0; i < vouchers.size(); i++) {
-            UserVoucher uv = vouchers.get(i);
-            String code = (uv.getVoucher()!=null && uv.getVoucher().getCode()!=null) ? uv.getVoucher().getCode() : ("ID:"+uv.getVoucherId());
-            items[i] = code;
-        }
-        builder.setItems(items, (dialog, which) -> {
+
+        android.widget.ArrayAdapter<UserVoucher> adapter = new android.widget.ArrayAdapter<UserVoucher>(this, android.R.layout.simple_list_item_1, vouchers) {
+            @Override
+            public android.view.View getView(int position, android.view.View convertView, android.view.ViewGroup parent) {
+                android.view.View row = convertView;
+                if (row == null) {
+                    android.widget.LinearLayout layout = new android.widget.LinearLayout(getContext());
+                    layout.setOrientation(android.widget.LinearLayout.HORIZONTAL);
+                    layout.setGravity(android.view.Gravity.CENTER_VERTICAL);
+                    int pad = (int) (12 * getResources().getDisplayMetrics().density);
+                    layout.setPadding(pad, pad, pad, pad);
+
+                    android.widget.ImageView icon = new android.widget.ImageView(getContext());
+                    int size = (int) (40 * getResources().getDisplayMetrics().density); // larger than two text lines
+                    android.widget.LinearLayout.LayoutParams lpIcon = new android.widget.LinearLayout.LayoutParams(size, size);
+                    lpIcon.rightMargin = (int) (12 * getResources().getDisplayMetrics().density);
+                    icon.setLayoutParams(lpIcon);
+                    icon.setScaleType(android.widget.ImageView.ScaleType.CENTER_INSIDE);
+
+                    android.widget.LinearLayout texts = new android.widget.LinearLayout(getContext());
+                    texts.setOrientation(android.widget.LinearLayout.VERTICAL);
+                    android.widget.LinearLayout.LayoutParams lpTexts = new android.widget.LinearLayout.LayoutParams(0, android.widget.LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+                    lpTexts.leftMargin = (int) (12 * getResources().getDisplayMetrics().density);
+                    texts.setLayoutParams(lpTexts);
+
+                    android.widget.TextView tvCode = new android.widget.TextView(getContext());
+                    tvCode.setTextColor(android.graphics.Color.parseColor("#111827"));
+                    tvCode.setTextSize(15);
+                    tvCode.setTypeface(tvCode.getTypeface(), android.graphics.Typeface.BOLD);
+
+                    android.widget.TextView tvExpiry = new android.widget.TextView(getContext());
+                    tvExpiry.setTextColor(android.graphics.Color.parseColor("#6B7280"));
+                    tvExpiry.setTextSize(13);
+
+                    texts.addView(tvCode);
+                    texts.addView(tvExpiry);
+
+                    layout.addView(icon);
+                    layout.addView(texts);
+                    row = layout;
+                }
+
+                UserVoucher uv = getItem(position);
+                String code = (uv != null && uv.getVoucher()!=null && uv.getVoucher().getCode()!=null) ? uv.getVoucher().getCode() : ("ID:" + (uv!=null?uv.getVoucherId():""));
+                String endDate = (uv != null && uv.getVoucher()!=null) ? uv.getVoucher().getEndDate() : null;
+                String formatted = formatDateDdMMyyyy(endDate);
+
+                android.widget.LinearLayout layout = (android.widget.LinearLayout) row;
+                android.widget.ImageView icon = (android.widget.ImageView) layout.getChildAt(0);
+                // Choose icon by discount type
+                if (uv != null && uv.getVoucher() != null && uv.getVoucher().getDiscountAmount() != null) {
+                    icon.setImageResource(com.example.prm392_finalproject_productsaleapp_group2.R.drawable.voucher_vnd);
+                } else {
+                    icon.setImageResource(com.example.prm392_finalproject_productsaleapp_group2.R.drawable.voucher);
+                }
+
+                android.widget.LinearLayout texts = (android.widget.LinearLayout) layout.getChildAt(1);
+                android.widget.TextView tvCode = (android.widget.TextView) texts.getChildAt(0);
+                android.widget.TextView tvExpiry = (android.widget.TextView) texts.getChildAt(1);
+
+                tvCode.setText(code);
+                tvExpiry.setText(formatted != null ? ("HSD: " + formatted) : "HSD: -");
+                return row;
+            }
+        };
+
+        builder.setAdapter(adapter, (dialog, which) -> {
             UserVoucher selected = vouchers.get(which);
+            String code = (selected.getVoucher()!=null && selected.getVoucher().getCode()!=null) ? selected.getVoucher().getCode() : ("ID:"+selected.getVoucherId());
             selectedVoucherId = selected.getVoucherId();
-            tvSelectedVoucher.setText("Voucher: " + items[which]);
+            tvSelectedVoucher.setText("Voucher: " + code);
+            calculateAmounts(selectedVoucherId);
         });
         builder.setNeutralButton("Bỏ chọn", (dialog, which) -> {
             // Clear voucher selection
             selectedVoucherId = null;
             tvSelectedVoucher.setText("Chưa chọn voucher");
+            // Recalculate amounts without voucher
+            calculateAmounts(null);
         });
         builder.setNegativeButton("Đóng", null);
         builder.show();
+    }
+
+    private String formatDateDdMMyyyy(String isoDateTime) {
+        if (isoDateTime == null || isoDateTime.length() < 10) return null;
+        try {
+            String datePart = isoDateTime.split("T")[0];
+            String[] parts = datePart.split("-");
+            if (parts.length == 3) {
+                return parts[2] + "/" + parts[1] + "/" + parts[0];
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private void calculateAmounts(Integer voucherId) {
+        String token = "Bearer " + sessionManager.getAuthToken();
+        com.example.prm392_finalproject_productsaleapp_group2.services.PaymentApiService.CalculateAmountRequest req = new com.example.prm392_finalproject_productsaleapp_group2.services.PaymentApiService.CalculateAmountRequest();
+        req.cartId = cartId;
+        req.userId = userId;
+        req.voucherId = voucherId;
+
+        com.example.prm392_finalproject_productsaleapp_group2.services.PaymentApiService api = com.example.prm392_finalproject_productsaleapp_group2.net.PaymentApiClient.getInstance().getApiService();
+        api.calculateVnpayAmount(token, req).enqueue(new retrofit2.Callback<com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse>() {
+            @Override
+            public void onResponse(retrofit2.Call<com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse> call, retrofit2.Response<com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse> response) {
+                if (response.isSuccessful() && response.body()!=null) {
+                    com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse data = response.body();
+                    TextView tvOriginal = findViewById(R.id.tv_original_amount);
+                    TextView tvDiscount = findViewById(R.id.tv_discount_amount);
+                    TextView tvFinal = findViewById(R.id.tv_final_amount);
+                    java.text.NumberFormat f = java.text.NumberFormat.getNumberInstance(java.util.Locale.getDefault());
+                    tvOriginal.setText(f.format(data.getOriginalAmount()) + " ₫");
+                    tvDiscount.setText("-" + f.format(data.getVoucherDiscount()) + " ₫");
+                    tvFinal.setText(f.format(data.getFinalAmount()) + " ₫");
+                }
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse> call, Throwable t) {
+                // Ignore failure here; keep existing totals
+            }
+        });
     }
 
     private void createOrderAndShowVnpay() {

@@ -201,7 +201,7 @@ public class VoucherActivity extends AppCompatActivity implements VoucherAdapter
             List<UserVoucher> vouchers = new ArrayList<>();
             
             try {
-                String urlString = ApiConfig.endpoint("/api/UserVouchers/filter?UserId=" + userId + "&IsUsed=false");
+                String urlString = ApiConfig.endpoint("/api/UserVouchers/user/" + userId + "/active-valid");
                 Log.d(TAG, "Loading vouchers from: " + urlString);
                 
                 URL url = new URL(urlString);
@@ -224,11 +224,9 @@ public class VoucherActivity extends AppCompatActivity implements VoucherAdapter
                     String responseStr = sb.toString();
                     Log.d(TAG, "Response: " + responseStr);
 
-                    JSONObject root = new JSONObject(responseStr);
-                    JSONArray items = root.getJSONArray("items");
-                    
+                    // API returns a bare array of UserVoucher
+                    JSONArray items = new JSONArray(responseStr);
                     Log.d(TAG, "Total items: " + items.length());
-
                     if (items.length() > 0) {
                         Gson gson = new Gson();
                         for (int i = 0; i < items.length(); i++) {
