@@ -34,6 +34,7 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
     private Button btnChooseVoucher;
     private EditText etBillingAddress, etPhone;
     private TextView tvUsername, tvEmail;
+    private ImageView ivEditAddress, ivEditPhone;
     private SessionManager sessionManager;
     private int userId;
     private int cartId;
@@ -69,6 +70,8 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
         etPhone = findViewById(R.id.et_phone);
         tvUsername = findViewById(R.id.tv_username);
         tvEmail = findViewById(R.id.tv_email);
+        ivEditAddress = findViewById(R.id.iv_edit_address);
+        ivEditPhone = findViewById(R.id.iv_edit_phone);
         
         // Setup back button
         findViewById(R.id.btn_back_header).setOnClickListener(v -> finish());
@@ -85,6 +88,25 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
             openVoucherDialog();
         });
         findViewById(R.id.btn_pay).setOnClickListener(v -> onPayButtonClick());
+
+        // Setup edit icon click listeners
+        ivEditAddress.setOnClickListener(v -> {
+            etBillingAddress.requestFocus();
+            // Show keyboard
+            android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.showSoftInput(etBillingAddress, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+            }
+        });
+
+        ivEditPhone.setOnClickListener(v -> {
+            etPhone.requestFocus();
+            // Show keyboard
+            android.view.inputmethod.InputMethodManager imm = (android.view.inputmethod.InputMethodManager) getSystemService(android.content.Context.INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.showSoftInput(etPhone, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT);
+            }
+        });
 
         loadCart();
         preloadUserContact();
