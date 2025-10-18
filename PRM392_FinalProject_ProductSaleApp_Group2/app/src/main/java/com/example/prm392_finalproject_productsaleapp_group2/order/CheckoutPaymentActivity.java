@@ -69,6 +69,9 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
         etPhone = findViewById(R.id.et_phone);
         tvUsername = findViewById(R.id.tv_username);
         tvEmail = findViewById(R.id.tv_email);
+        
+        // Setup back button
+        findViewById(R.id.btn_back_header).setOnClickListener(v -> finish());
 
         cartAdapter = new CheckoutCartAdapter(cartItems);
         rvCartItems.setLayoutManager(new LinearLayoutManager(this));
@@ -255,10 +258,65 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
             Toast.makeText(this, "Không có voucher khả dụng", Toast.LENGTH_SHORT).show();
             return;
         }
+        
+        // Check each voucher's applicability
+        checkVoucherApplicability(vouchers, 0, new java.util.ArrayList<>());
+    }
+    
+    private void checkVoucherApplicability(java.util.List<UserVoucher> vouchers, int index, java.util.List<VoucherApplicability> results) {
+        if (index >= vouchers.size()) {
+            // All vouchers checked, show dialog
+            showVoucherDialogWithResults(vouchers, results);
+            return;
+        }
+        
+        UserVoucher voucher = vouchers.get(index);
+        String token = "Bearer " + sessionManager.getAuthToken();
+        com.example.prm392_finalproject_productsaleapp_group2.services.PaymentApiService.CalculateAmountRequest req = new com.example.prm392_finalproject_productsaleapp_group2.services.PaymentApiService.CalculateAmountRequest();
+        req.cartId = cartId;
+        req.userId = userId;
+        req.voucherId = voucher.getVoucherId();
+
+        com.example.prm392_finalproject_productsaleapp_group2.services.PaymentApiService api = com.example.prm392_finalproject_productsaleapp_group2.net.PaymentApiClient.getInstance().getApiService();
+        api.calculateVnpayAmount(token, req).enqueue(new retrofit2.Callback<com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse>() {
+            @Override
+            public void onResponse(retrofit2.Call<com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse> call, retrofit2.Response<com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse> response) {
+                boolean applicable = response.isSuccessful() && response.body() != null;
+                String errorMessage = null;
+                if (!applicable) {
+                    try {
+                        if (response.errorBody() != null) {
+                            String responseBody = response.errorBody().string();
+                            if (responseBody.contains("\"message\"")) {
+                                try {
+                                    org.json.JSONObject json = new org.json.JSONObject(responseBody);
+                                    errorMessage = json.optString("message", "Không thể áp dụng");
+                                } catch (Exception e) {
+                                    errorMessage = responseBody;
+                                }
+                            } else {
+                                errorMessage = responseBody;
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                }
+                results.add(new VoucherApplicability(voucher, applicable, errorMessage));
+                checkVoucherApplicability(vouchers, index + 1, results);
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call<com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse> call, Throwable t) {
+                results.add(new VoucherApplicability(voucher, false, "Lỗi kết nối"));
+                checkVoucherApplicability(vouchers, index + 1, results);
+            }
+        });
+    }
+    
+    private void showVoucherDialogWithResults(java.util.List<UserVoucher> vouchers, java.util.List<VoucherApplicability> results) {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
         builder.setTitle("Chọn voucher");
-
-        android.widget.ArrayAdapter<UserVoucher> adapter = new android.widget.ArrayAdapter<UserVoucher>(this, android.R.layout.simple_list_item_1, vouchers) {
+        
+        android.widget.ArrayAdapter<VoucherApplicability> adapter = new android.widget.ArrayAdapter<VoucherApplicability>(this, android.R.layout.simple_list_item_1, results) {
             @Override
             public android.view.View getView(int position, android.view.View convertView, android.view.ViewGroup parent) {
                 android.view.View row = convertView;
@@ -270,7 +328,7 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
                     layout.setPadding(pad, pad, pad, pad);
 
                     android.widget.ImageView icon = new android.widget.ImageView(getContext());
-                    int size = (int) (40 * getResources().getDisplayMetrics().density); // larger than two text lines
+                    int size = (int) (40 * getResources().getDisplayMetrics().density);
                     android.widget.LinearLayout.LayoutParams lpIcon = new android.widget.LinearLayout.LayoutParams(size, size);
                     lpIcon.rightMargin = (int) (12 * getResources().getDisplayMetrics().density);
                     icon.setLayoutParams(lpIcon);
@@ -291,21 +349,32 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
                     tvExpiry.setTextColor(android.graphics.Color.parseColor("#6B7280"));
                     tvExpiry.setTextSize(13);
 
+                    android.widget.TextView tvError = new android.widget.TextView(getContext());
+                    tvError.setTextColor(android.graphics.Color.parseColor("#EF4444"));
+                    tvError.setTextSize(12);
+
                     texts.addView(tvCode);
                     texts.addView(tvExpiry);
+                    texts.addView(tvError);
 
                     layout.addView(icon);
                     layout.addView(texts);
                     row = layout;
                 }
 
-                UserVoucher uv = getItem(position);
+                VoucherApplicability va = getItem(position);
+                UserVoucher uv = va.voucher;
                 String code = (uv != null && uv.getVoucher()!=null && uv.getVoucher().getCode()!=null) ? uv.getVoucher().getCode() : ("ID:" + (uv!=null?uv.getVoucherId():""));
                 String endDate = (uv != null && uv.getVoucher()!=null) ? uv.getVoucher().getEndDate() : null;
                 String formatted = formatDateDdMMyyyy(endDate);
 
                 android.widget.LinearLayout layout = (android.widget.LinearLayout) row;
                 android.widget.ImageView icon = (android.widget.ImageView) layout.getChildAt(0);
+                android.widget.LinearLayout texts = (android.widget.LinearLayout) layout.getChildAt(1);
+                android.widget.TextView tvCode = (android.widget.TextView) texts.getChildAt(0);
+                android.widget.TextView tvExpiry = (android.widget.TextView) texts.getChildAt(1);
+                android.widget.TextView tvError = (android.widget.TextView) texts.getChildAt(2);
+
                 // Choose icon by discount type
                 if (uv != null && uv.getVoucher() != null && uv.getVoucher().getDiscountAmount() != null) {
                     icon.setImageResource(com.example.prm392_finalproject_productsaleapp_group2.R.drawable.voucher_vnd);
@@ -313,32 +382,58 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
                     icon.setImageResource(com.example.prm392_finalproject_productsaleapp_group2.R.drawable.voucher);
                 }
 
-                android.widget.LinearLayout texts = (android.widget.LinearLayout) layout.getChildAt(1);
-                android.widget.TextView tvCode = (android.widget.TextView) texts.getChildAt(0);
-                android.widget.TextView tvExpiry = (android.widget.TextView) texts.getChildAt(1);
-
                 tvCode.setText(code);
                 tvExpiry.setText(formatted != null ? ("HSD: " + formatted) : "HSD: -");
+                
+                if (va.applicable) {
+                    tvError.setText("");
+                    tvCode.setTextColor(android.graphics.Color.parseColor("#111827"));
+                    tvExpiry.setTextColor(android.graphics.Color.parseColor("#6B7280"));
+                    icon.setAlpha(1.0f);
+                } else {
+                    tvError.setText(va.errorMessage != null ? va.errorMessage : "Không thể áp dụng");
+                    tvCode.setTextColor(android.graphics.Color.parseColor("#9CA3AF"));
+                    tvExpiry.setTextColor(android.graphics.Color.parseColor("#9CA3AF"));
+                    icon.setAlpha(0.5f);
+                }
+                
                 return row;
+            }
+            
+            @Override
+            public boolean isEnabled(int position) {
+                return getItem(position).applicable;
             }
         };
 
         builder.setAdapter(adapter, (dialog, which) -> {
-            UserVoucher selected = vouchers.get(which);
-            String code = (selected.getVoucher()!=null && selected.getVoucher().getCode()!=null) ? selected.getVoucher().getCode() : ("ID:"+selected.getVoucherId());
-            selectedVoucherId = selected.getVoucherId();
-            tvSelectedVoucher.setText("Voucher: " + code);
-            calculateAmounts(selectedVoucherId);
+            VoucherApplicability selected = results.get(which);
+            if (selected.applicable) {
+                String code = (selected.voucher.getVoucher()!=null && selected.voucher.getVoucher().getCode()!=null) ? selected.voucher.getVoucher().getCode() : ("ID:"+selected.voucher.getVoucherId());
+                selectedVoucherId = selected.voucher.getVoucherId();
+                tvSelectedVoucher.setText("Voucher: " + code);
+                calculateAmounts(selectedVoucherId);
+            }
         });
         builder.setNeutralButton("Bỏ chọn", (dialog, which) -> {
-            // Clear voucher selection
             selectedVoucherId = null;
             tvSelectedVoucher.setText("Chưa chọn voucher");
-            // Recalculate amounts without voucher
             calculateAmounts(null);
         });
         builder.setNegativeButton("Đóng", null);
         builder.show();
+    }
+    
+    private static class VoucherApplicability {
+        final UserVoucher voucher;
+        final boolean applicable;
+        final String errorMessage;
+        
+        VoucherApplicability(UserVoucher voucher, boolean applicable, String errorMessage) {
+            this.voucher = voucher;
+            this.applicable = applicable;
+            this.errorMessage = errorMessage;
+        }
     }
 
     private String formatDateDdMMyyyy(String isoDateTime) {
@@ -373,12 +468,40 @@ public class CheckoutPaymentActivity extends AppCompatActivity {
                     tvOriginal.setText(f.format(data.getOriginalAmount()) + " ₫");
                     tvDiscount.setText("-" + f.format(data.getVoucherDiscount()) + " ₫");
                     tvFinal.setText(f.format(data.getFinalAmount()) + " ₫");
+                    
+                    // Show success message
+                    if (voucherId != null) {
+                        Toast.makeText(CheckoutPaymentActivity.this, "Đã áp dụng voucher thành công", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(CheckoutPaymentActivity.this, "Đã bỏ chọn voucher", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    // Show error message from backend
+                    String errorMessage = "Không thể áp dụng voucher";
+                    try {
+                        if (response.errorBody() != null) {
+                            String responseBody = response.errorBody().string();
+                            // Try to parse JSON and extract message field
+                            if (responseBody.contains("\"message\"")) {
+                                try {
+                                    org.json.JSONObject json = new org.json.JSONObject(responseBody);
+                                    errorMessage = json.optString("message", errorMessage);
+                                } catch (Exception e) {
+                                    // If JSON parsing fails, use raw response
+                                    errorMessage = responseBody;
+                                }
+                            } else {
+                                errorMessage = responseBody;
+                            }
+                        }
+                    } catch (Exception ignored) {}
+                    Toast.makeText(CheckoutPaymentActivity.this, errorMessage, Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onFailure(retrofit2.Call<com.example.prm392_finalproject_productsaleapp_group2.models.PaymentCreateResponse> call, Throwable t) {
-                // Ignore failure here; keep existing totals
+                Toast.makeText(CheckoutPaymentActivity.this, "Lỗi kết nối khi áp dụng voucher", Toast.LENGTH_SHORT).show();
             }
         });
     }
